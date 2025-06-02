@@ -1,7 +1,12 @@
-import prisma from "../config/db";
-import logger from "../utils/logger";
+import prisma from "../config/db.js";
+import logger from "../utils/logger.js";
 import bcrypt from "bcrypt";
-import { CustomError } from "../utils/customError";
+import { CustomError } from "../utils/customError.js";
+import { Role } from "generated/prisma/index.js";
+import {
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary,
+} from "../utils/cloudinary.js";
 
 export const getUsers = async ({
   page = 1,
@@ -22,7 +27,7 @@ export const getUsers = async ({
           { fullname: { contains: search, mode: "insensitive" } },
         ],
       }),
-      ...(role && { role }),
+      ...(role && { role: role as Role }),
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -35,7 +40,7 @@ export const getUsers = async ({
           { fullname: { contains: search, mode: "insensitive" } },
         ],
       }),
-      ...(role && { role }),
+      ...(role && { role: role as Role }),
     },
   });
   logger.info("Fetched users", { users, totalItems, page, limit });
@@ -62,7 +67,7 @@ export const createUser = async (userData: {
   email: string;
   fullname: string;
   password: string;
-  role: string;
+  role: Role;
 }) => {
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -87,7 +92,7 @@ export const updateUserById = async (
   userData: {
     fullname: string;
     password?: string;
-    role: string;
+    role: Role;
   }
 ) => {
   // Hash the password
@@ -147,20 +152,39 @@ export const getProfile = async (userId: string) => {
 
 export const updateProfile = async (
   userId: string,
-  profileData: {
-    fullname?: string;
-    avatarUrl?: string;
-    publicId?: string;
-  }
+  fullname?: string,
+  avatarUrl?: string
 ) => {
-  const user = await prisma.user.update({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
-    data: profileData,
   });
   if (!user) {
     logger.warn("User not found for profile update", { userId });
     throw new CustomError("User not found", 404);
   }
-  logger.info("Updated user profile", { userId, user });
+  let uploadResult;
+
+  // Handle avatar upload if provided
+  if (avatarUrl) {
+    // If user has an existing avatar, delete it from Cloudinary
+    await deleteImageFromCloudinary(user.publicId);
+    // Upload new avatar to Cloudinary
+    uploadResult = await uploadImageToCloudinary(avatarUrl);
+    avatarUrl = uploadResult.secure_url;
+  } else {
+    avatarUrl = user.avatarUrl; // Keep existing avatar if not updated
+  }
+
+  // Update user profile
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      fullname: fullname || user.fullname,
+      avatarUrl,
+      publicId: uploadResult?.public_id || user.publicId,
+    },
+  });
+
+  logger.info("Updated user profile", { userId, updatedUser });
   return { message: "Profile updated successfully" };
 };

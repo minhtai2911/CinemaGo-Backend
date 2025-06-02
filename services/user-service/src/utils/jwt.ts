@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import prisma from "../config/db";
-import logger from "./logger";
+import prisma from "../config/db.js";
+import logger from "./logger.js";
 
 export const generateTokens = async (
   userId: string,

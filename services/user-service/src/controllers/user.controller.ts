@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import * as UserService from "../services/user.service";
-import { asyncHandler } from "../middlewares/asyncHandler";
-import { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import * as UserService from "../services/user.service.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search, role } = req.query;
@@ -87,11 +87,11 @@ export const updateProfile = asyncHandler(
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const { fullname, avatarUrl, publicId } = req.body;
+    const { fullname } = req.body;
+    const avatarUrl = req.file?.path;
     const message = await UserService.updateProfile(userId, {
       fullname,
       avatarUrl,
-      publicId,
     });
     res.status(200).json({ message });
   }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import * as AuthService from "../services/auth.service";
-import { asyncHandler } from "../middlewares/asyncHandler";
-import { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import * as AuthService from "../services/auth.service.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
