@@ -13,7 +13,7 @@ export const signup = async (
 ) => {
   // Validate input
   if (!email || !password || !fullname) {
-    logger.error("Email, password, and fullname are required");
+    logger.warn("Email, password, and fullname are required");
     throw new CustomError("Email, password, and fullname are required", 400);
   }
   // Check if user already exists
@@ -21,7 +21,7 @@ export const signup = async (
     where: { email },
   });
   if (existingUser) {
-    logger.error("User already exists", { email });
+    logger.warn("User already exists", { email });
     throw new CustomError("User already exists", 409);
   }
   // Hash the password
@@ -48,7 +48,7 @@ export const signup = async (
 export const login = async (email: string, password: string) => {
   // Validate input
   if (!email || !password) {
-    logger.error("Email and password are required");
+    logger.warn("Email and password are required");
     throw new CustomError("Email and password are required", 400);
   }
   // Find the user
@@ -56,13 +56,13 @@ export const login = async (email: string, password: string) => {
     where: { email },
   });
   if (!user) {
-    logger.error("User not found", { email });
+    logger.warn("User not found", { email });
     throw new CustomError("User not found", 404);
   }
   // Check the password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    logger.error("Invalid password", { email });
+    logger.warn("Invalid password", { email });
     throw new CustomError("Invalid password", 401);
   }
   // Generate tokens
@@ -82,7 +82,7 @@ export const login = async (email: string, password: string) => {
 export const refreshAccessToken = async (userId: string, token: string) => {
   // Validate input
   if (!token) {
-    logger.error("Refresh token is required");
+    logger.warn("Refresh token is required");
     throw new CustomError("Refresh token is required", 400);
   }
   // Verify the refresh token
@@ -94,7 +94,7 @@ export const refreshAccessToken = async (userId: string, token: string) => {
     },
   });
   if (!decoded) {
-    logger.error("Invalid refresh token", { token });
+    logger.warn("Invalid refresh token", { token });
     throw new CustomError("Invalid refresh token", 401);
   }
   // Check if the refresh token is expired
@@ -103,7 +103,7 @@ export const refreshAccessToken = async (userId: string, token: string) => {
     new Date(decoded.expiresAt).getTime() / 1000
   );
   if (expiresAtInSeconds < currentTime) {
-    logger.error("Refresh token has expired", { token });
+    logger.warn("Refresh token has expired", { token });
     throw new CustomError("Refresh token has expired", 401);
   }
   // Generate new access token
@@ -122,7 +122,7 @@ export const refreshAccessToken = async (userId: string, token: string) => {
 export const logout = async (userId: string, token: string) => {
   // Validate input
   if (!token) {
-    logger.error("Refresh token is required");
+    logger.warn("Refresh token is required");
     throw new CustomError("Refresh token is required", 400);
   }
   // Delete the refresh token
@@ -136,7 +136,7 @@ export const logout = async (userId: string, token: string) => {
 export const forgotPassword = async (email: string) => {
   // Validate input
   if (!email) {
-    logger.error("Email is required for password reset");
+    logger.warn("Email is required for password reset");
     throw new CustomError("Email is required for password reset", 400);
   }
   // Find the user
@@ -144,7 +144,7 @@ export const forgotPassword = async (email: string) => {
     where: { email },
   });
   if (!user) {
-    logger.error("User not found for password reset", { email });
+    logger.warn("User not found for password reset", { email });
     throw new CustomError("User not found", 404);
   }
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -191,7 +191,7 @@ export const forgotPassword = async (email: string) => {
 export const verifyOtp = async (email: string, otp: string) => {
   // Validate input
   if (!email || !otp) {
-    logger.error("Email and OTP are required for verification");
+    logger.warn("Email and OTP are required for verification");
     throw new CustomError("Email and OTP are required for verification", 400);
   }
   // Find the user
@@ -199,7 +199,7 @@ export const verifyOtp = async (email: string, otp: string) => {
     where: { email },
   });
   if (!user) {
-    logger.error("User not found for OTP verification", { email });
+    logger.warn("User not found for OTP verification", { email });
     throw new CustomError("User not found", 404);
   }
   // Find the OTP in the database
@@ -215,7 +215,7 @@ export const verifyOtp = async (email: string, otp: string) => {
     },
   });
   if (!otpRecord) {
-    logger.error("Invalid or expired OTP", { email, otp });
+    logger.warn("Invalid or expired OTP", { email, otp });
     throw new CustomError("Invalid or expired OTP", 401);
   }
   // Verify the OTP
@@ -231,7 +231,7 @@ export const resetPassword = async (
 ) => {
   // Validate input
   if (!email || !otp || !newPassword) {
-    logger.error("Email, OTP, and new password are required for reset");
+    logger.warn("Email, OTP, and new password are required for reset");
     throw new CustomError(
       "Email, OTP, and new password are required for reset",
       400
@@ -240,7 +240,7 @@ export const resetPassword = async (
   // Verify the OTP
   const isOtpValid = await verifyOtp(email, otp);
   if (!isOtpValid) {
-    logger.error("Invalid OTP for password reset", { email, otp });
+    logger.warn("Invalid OTP for password reset", { email, otp });
     throw new CustomError("Invalid OTP", 401);
   }
   // Hash the new password
@@ -265,7 +265,7 @@ export const resetPassword = async (
 export const sendVerificationLink = async (email: string) => {
   // Validate input
   if (!email) {
-    logger.error("Email is required for verification link");
+    logger.warn("Email is required for verification link");
     throw new CustomError("Email is required for verification link", 400);
   }
   // Find the user
@@ -273,7 +273,7 @@ export const sendVerificationLink = async (email: string) => {
     where: { email },
   });
   if (!user) {
-    logger.error("User not found for verification link", { email });
+    logger.warn("User not found for verification link", { email });
     throw new CustomError("User not found", 404);
   }
   // Generate verification token
@@ -310,7 +310,7 @@ export const sendVerificationLink = async (email: string) => {
 export const verifyAccountByLink = async (token: string, userId: string) => {
   // Validate input
   if (!token || !userId) {
-    logger.error("Token and userId are required for account verification");
+    logger.warn("Token and userId are required for account verification");
     throw new CustomError(
       "Token and userId are required for account verification",
       400
@@ -327,7 +327,7 @@ export const verifyAccountByLink = async (token: string, userId: string) => {
     },
   });
   if (!verificationToken) {
-    logger.error("Invalid or expired verification token", { token, userId });
+    logger.warn("Invalid or expired verification token", { token, userId });
     throw new CustomError("Invalid or expired verification token", 401);
   }
   // Update the user's active status
@@ -350,7 +350,7 @@ export const changePassword = async (
 ) => {
   // Validate input
   if (!oldPassword || !newPassword) {
-    logger.error("Old password and new password are required for change");
+    logger.warn("Old password and new password are required for change");
     throw new CustomError(
       "Old password and new password are required for change",
       400
@@ -361,13 +361,13 @@ export const changePassword = async (
     where: { id: userId },
   });
   if (!user) {
-    logger.error("User not found for password change", { userId });
+    logger.warn("User not found for password change", { userId });
     throw new CustomError("User not found", 404);
   }
   // Check the old password
   const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
   if (!isOldPasswordValid) {
-    logger.error("Invalid old password", { userId });
+    logger.warn("Invalid old password", { userId });
     throw new CustomError("Invalid old password", 401);
   }
   // Hash the new password
