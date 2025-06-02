@@ -1,0 +1,51 @@
+import jwt from "jsonwebtoken";
+import prisma from "../config/db";
+import logger from "./logger";
+
+export const generateTokens = async (
+  userId: string,
+  role: string,
+  avatarUrl: string,
+  publicId: string
+) => {
+  const accessToken = jwt.sign(
+    {
+      userId: userId,
+      role: role,
+      avatarUrl: avatarUrl,
+      publicId: publicId,
+    },
+    process.env.ACCESS_TOKEN_SECRET || "defaultAccessTokenSecret",
+    { expiresIn: "60m" }
+  );
+
+  const refreshToken = jwt.sign(
+    {
+      userId: userId,
+      role: role,
+      avatarUrl: avatarUrl,
+      publicId: publicId,
+    },
+    process.env.REFRESH_TOKEN_SECRET || "defaultRefreshTokenSecret",
+    { expiresIn: "7d" }
+  );
+
+  if (!accessToken || !refreshToken) {
+    throw new Error("Failed to generate tokens");
+  }
+
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    },
+  });
+
+  logger.info("Tokens generated successfully", {
+    userId,
+    accessToken,
+    refreshToken,
+  });
+  return { accessToken, refreshToken };
+};
