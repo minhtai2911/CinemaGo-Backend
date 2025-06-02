@@ -62,10 +62,10 @@ export const archiveUserById = asyncHandler(
   }
 );
 
-export const unarchiveUserById = asyncHandler(
+export const restoreUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
-    const message = await UserService.unarchiveUserById(userId);
+    const message = await UserService.restoreUserById(userId);
     res.status(200).json({ message });
   }
 );

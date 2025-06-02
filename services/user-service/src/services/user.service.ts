@@ -125,17 +125,17 @@ export const archiveUserById = async (userId: string) => {
   return { message: "User archived successfully" };
 };
 
-export const unarchiveUserById = async (userId: string) => {
+export const restoreUserById = async (userId: string) => {
   const user = await prisma.user.update({
     where: { id: userId },
     data: { isActive: true },
   });
   if (!user) {
-    logger.warn("User not found for unarchiving", { userId });
+    logger.warn("User not found for restoring", { userId });
     throw new CustomError("User not found", 404);
   }
-  logger.info("Unarchived user", { userId, user });
-  return { message: "User unarchived successfully" };
+  logger.info("Restored user", { userId, user });
+  return { message: "User restored successfully" };
 };
 
 export const getProfile = async (userId: string) => {

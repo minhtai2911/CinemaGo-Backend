@@ -33,10 +33,10 @@ router.put(
   UserController.archiveUserById
 );
 router.put(
-  "/:id/unarchive",
+  "/:id/restore",
   verifyToken,
   authorizeRole("ADMIN"),
-  UserController.unarchiveUserById
+  UserController.restoreUserById
 );
 
 export default router;
