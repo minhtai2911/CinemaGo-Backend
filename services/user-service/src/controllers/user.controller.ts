@@ -89,10 +89,11 @@ export const updateProfile = asyncHandler(
     }
     const { fullname } = req.body;
     const avatarUrl = req.file?.path;
-    const message = await UserService.updateProfile(userId, {
+    const message = await UserService.updateProfile(
+      userId,
       fullname,
-      avatarUrl,
-    });
+      avatarUrl
+    );
     res.status(200).json({ message });
   }
 );
