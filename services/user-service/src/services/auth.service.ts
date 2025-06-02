@@ -1,10 +1,10 @@
-import prisma from "../config/db";
+import prisma from "../config/db.js";
 import bcrypt from "bcrypt";
-import { generateTokens } from "../utils/jwt";
-import logger from "../utils/logger";
-import { sendMail } from "../utils/sendMail";
+import { generateTokens } from "../utils/jwt.js";
+import logger from "../utils/logger.js";
+import { sendMail } from "../utils/sendMail.js";
 import { randomBytes } from "crypto";
-import { CustomError } from "../utils/customError";
+import { CustomError } from "../utils/customError.js";
 
 export const signup = async (
   email: string,
@@ -99,7 +99,10 @@ export const refreshAccessToken = async (userId: string, token: string) => {
   }
   // Check if the refresh token is expired
   const currentTime = Math.floor(Date.now() / 1000);
-  if (decoded.expiresAt < currentTime) {
+  const expiresAtInSeconds = Math.floor(
+    new Date(decoded.expiresAt).getTime() / 1000
+  );
+  if (expiresAtInSeconds < currentTime) {
     logger.error("Refresh token has expired", { token });
     throw new CustomError("Refresh token has expired", 401);
   }
@@ -147,7 +150,7 @@ export const forgotPassword = async (email: string) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const hashedOtp = await bcrypt.hash(otp, 10);
   // Store OTP in the database
-  await prisma.otp.create({
+  await prisma.oTP.create({
     data: {
       userId: user.id,
       otp: hashedOtp,
@@ -200,7 +203,7 @@ export const verifyOtp = async (email: string, otp: string) => {
     throw new CustomError("User not found", 404);
   }
   // Find the OTP in the database
-  const otpRecord = await prisma.otp.findFirst({
+  const otpRecord = await prisma.oTP.findFirst({
     where: {
       userId: user.id,
       expiresAt: {
@@ -252,7 +255,7 @@ export const resetPassword = async (
     data: { password: hashedPassword },
   });
   // Delete the OTP record
-  await prisma.otp.deleteMany({
+  await prisma.oTP.deleteMany({
     where: { userId: user.id },
   });
   logger.info("Password reset successfully", { email });
