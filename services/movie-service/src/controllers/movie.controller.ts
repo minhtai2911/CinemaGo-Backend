@@ -5,20 +5,22 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
     const { page, limit, search } = req.query;
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
     const { categories, totalItems, totalPages } =
       await MovieService.getCategories({
-        page: Number(page) || 1,
-        limit: Number(limit) || 10,
+        page: pageNumber,
+        limit: limitNumber,
         search: String(search) || "",
       });
     res.status(200).json({
       pagination: {
         totalItems,
         totalPages,
-        currentPage: Number(page),
-        pageSize: Number(limit),
-        hasNextPage: Number(page) < totalPages,
-        hasPrevPage: Number(page) > 1,
+        currentPage: pageNumber,
+        pageSize: limitNumber,
+        hasNextPage: pageNumber < totalPages,
+        hasPrevPage: pageNumber > 1,
       },
       data: categories,
     });

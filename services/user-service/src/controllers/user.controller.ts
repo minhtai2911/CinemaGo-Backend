@@ -5,9 +5,11 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search, role } = req.query;
+  const pageNumber = Number(page) || 1;
+  const limitNumber = Number(limit) || 10;
   const { users, totalItems, totalPages } = await UserService.getUsers({
-    page: Number(page) || 1,
-    limit: Number(limit) || 10,
+    page: pageNumber,
+    limit: limitNumber,
     search: String(search) || "",
     role: String(role) || undefined,
   });
@@ -15,10 +17,10 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     pagination: {
       totalItems,
       totalPages,
-      currentPage: Number(page),
-      pageSize: Number(limit),
-      hasNextPage: Number(page) < totalPages,
-      hasPrevPage: Number(page) > 1,
+      currentPage: pageNumber,
+      pageSize: limitNumber,
+      hasNextPage: pageNumber < totalPages,
+      hasPrevPage: pageNumber > 1,
     },
     data: users,
   });

@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Cinema" (
+CREATE TABLE "cinemas" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "address" TEXT NOT NULL,
@@ -7,8 +7,8 @@ CREATE TABLE "Cinema" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Cinema_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "cinemas_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cinema_name_key" ON "Cinema"("name");
+CREATE UNIQUE INDEX "cinemas_name_key" ON "cinemas"("name");
