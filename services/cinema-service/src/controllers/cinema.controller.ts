@@ -4,21 +4,21 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getCinemas = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search } = req.query;
-  const cinemas = await cinemaService.getCinemas({
+  const data = await cinemaService.getCinemas({
     page: Number(page) || 1,
     limit: Number(limit) || 10,
     search: String(search) || "",
   });
   res.status(200).json({
     pagination: {
-      totalItems: cinemas.totalItems,
-      totalPages: cinemas.totalPages,
+      totalItems: data.totalItems,
+      totalPages: data.totalPages,
       currentPage: Number(page),
       pageSize: Number(limit),
-      hasNextPage: Number(page) < cinemas.totalPages,
+      hasNextPage: Number(page) < data.totalPages,
       hasPrevPage: Number(page) > 1,
     },
-    data: cinemas.cinemas,
+    data: data.cinemas,
   });
 });
 
