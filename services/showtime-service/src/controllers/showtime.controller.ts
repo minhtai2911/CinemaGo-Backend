@@ -54,7 +54,7 @@ export const createShowtime = asyncHandler(
       !endTime ||
       !price ||
       !language ||
-      !subtitle ||
+      subtitle === undefined ||
       !format
     ) {
       return res.status(400).json({ message: "All fields are required" });
