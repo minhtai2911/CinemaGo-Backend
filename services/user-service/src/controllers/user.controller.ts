@@ -35,13 +35,13 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   if (!email || !fullname || !password || !role) {
     return res.status(400).json({ message: "All fields are required" });
   }
-  const message = await UserService.createUser({
+  const user = await UserService.createUser({
     email,
     fullname,
     password,
     role,
   });
-  res.status(201).json({ message });
+  res.status(201).json({ data: user, message: "User created successfully" });
 });
 
 export const updateUserById = asyncHandler(
@@ -51,12 +51,12 @@ export const updateUserById = asyncHandler(
     if (!fullname || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const message = await UserService.updateUserById(userId, {
+    const user = await UserService.updateUserById(userId, {
       fullname,
       password,
       role,
     });
-    res.status(200).json({ message });
+    res.status(200).json({ data: user, message: "User updated successfully" });
   }
 );
 
@@ -64,7 +64,7 @@ export const archiveUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
     const message = await UserService.archiveUserById(userId);
-    res.status(200).json({ message });
+    res.status(200).json(message);
   }
 );
 
@@ -72,7 +72,7 @@ export const restoreUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
     const message = await UserService.restoreUserById(userId);
-    res.status(200).json({ message });
+    res.status(200).json(message);
   }
 );
 
@@ -98,11 +98,9 @@ export const updateProfile = asyncHandler(
     if (!fullname) {
       return res.status(400).json({ message: "Fullname is required" });
     }
-    const message = await UserService.updateProfile(
-      userId,
-      fullname,
-      avatarUrl
-    );
-    res.status(200).json({ message });
+    const user = await UserService.updateProfile(userId, fullname, avatarUrl);
+    res
+      .status(200)
+      .json({ data: user, message: "Profile updated successfully" });
   }
 );

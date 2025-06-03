@@ -42,7 +42,7 @@ export const signup = async (
     userId: user.id,
     email: user.email,
   });
-  return { message: "User created successfully" };
+  return user;
 };
 
 export const login = async (email: string, password: string) => {

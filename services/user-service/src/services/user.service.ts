@@ -84,7 +84,7 @@ export const createUser = async (userData: {
     data: userData,
   });
   logger.info("Created new user", { user });
-  return { message: "User created successfully" };
+  return user;
 };
 
 export const updateUserById = async (
@@ -99,7 +99,7 @@ export const updateUserById = async (
   if (userData.password) {
     userData.password = await bcrypt.hash(userData.password, 10);
   } else {
-    delete userData.password; 
+    delete userData.password;
   }
   // Update user
   const user = await prisma.user.update({
@@ -111,7 +111,7 @@ export const updateUserById = async (
     throw new CustomError("User not found", 404);
   }
   logger.info("Updated user", { userId, user });
-  return { message: "User updated successfully" };
+  return user;
 };
 
 export const archiveUserById = async (userId: string) => {
@@ -188,5 +188,5 @@ export const updateProfile = async (
   });
 
   logger.info("Updated user profile", { userId, updatedUser });
-  return { message: "Profile updated successfully" };
+  return updatedUser;
 };
