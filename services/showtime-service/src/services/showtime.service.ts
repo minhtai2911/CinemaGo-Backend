@@ -69,9 +69,19 @@ export const createShowtime = async (
     logger.warn("Showtime conflict", { existingShowtime });
     throw new CustomError("Showtime conflict", 409);
   }
-  const room = await axios.get(
-    `${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`
-  );
+  let room;
+  try {
+    room = await axios.get(
+      `${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`
+    );
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      logger.warn("Room not found", { roomId });
+      throw new CustomError("Room not found", 404);
+    }
+    logger.error("Failed to fetch room", { roomId, error });
+    throw new CustomError("Failed to fetch room", 500);
+  }
   if (!room.data) {
     logger.warn("Room not found", { roomId });
     throw new CustomError("Room not found", 404);
