@@ -125,7 +125,7 @@ export const updateShowtimeById = async (
   if (data.language) {
     updateShowtime.language = data.language;
   }
-  if (data.subtitle) {
+  if (data.subtitle !== undefined) {
     updateShowtime.subtitle = data.subtitle;
   }
   if (data.format) {
