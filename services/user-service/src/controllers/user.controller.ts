@@ -32,6 +32,9 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, fullname, password, role } = req.body;
+  if (!email || !fullname || !password || !role) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
   const message = await UserService.createUser({
     email,
     fullname,
@@ -45,6 +48,9 @@ export const updateUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
     const { fullname, role, password } = req.body;
+    if (!fullname || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
     const message = await UserService.updateUserById(userId, {
       fullname,
       password,
@@ -89,6 +95,9 @@ export const updateProfile = asyncHandler(
     }
     const { fullname } = req.body;
     const avatarUrl = req.file?.path;
+    if (!fullname) {
+      return res.status(400).json({ message: "Fullname is required" });
+    }
     const message = await UserService.updateProfile(
       userId,
       fullname,

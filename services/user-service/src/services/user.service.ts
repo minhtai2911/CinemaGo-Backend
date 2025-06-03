@@ -98,6 +98,8 @@ export const updateUserById = async (
   // Hash the password
   if (userData.password) {
     userData.password = await bcrypt.hash(userData.password, 10);
+  } else {
+    delete userData.password; 
   }
   // Update user
   const user = await prisma.user.update({
@@ -152,7 +154,7 @@ export const getProfile = async (userId: string) => {
 
 export const updateProfile = async (
   userId: string,
-  fullname?: string,
+  fullname: string,
   avatarUrl?: string
 ) => {
   const user = await prisma.user.findUnique({
