@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import * as MovieService from "../services/movie.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
@@ -46,7 +45,7 @@ export const createCategory = asyncHandler(
 );
 
 export const updateCategoryById = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: Request, res: Response) => {
     const categoryId = req.params.categoryId;
     const { name, description } = req.body;
     if (!name || !description) {
@@ -62,7 +61,7 @@ export const updateCategoryById = asyncHandler(
 );
 
 export const archiveCategoryById = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: Request, res: Response) => {
     const categoryId = req.params.categoryId;
     const message = await MovieService.archiveCategoryById(categoryId);
     res.status(200).json(message);
@@ -70,7 +69,7 @@ export const archiveCategoryById = asyncHandler(
 );
 
 export const restoreCategoryById = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: Request, res: Response) => {
     const categoryId = req.params.categoryId;
     const message = await MovieService.restoreCategoryById(categoryId);
     res.status(200).json(message);
