@@ -6,6 +6,7 @@ type Seat = {
   row: string;
   number: number;
   type: string;
+  extraPrice: number;
 };
 
 export const getRooms = async ({
