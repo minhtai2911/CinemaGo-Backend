@@ -71,11 +71,9 @@ export const createShowtime = async (
   }
   let room;
   try {
-    room = await axios.get(
-      `${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`
-    );
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
+    room = await axios.get(`${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`);
+  } catch (error: any) {
+    if (error?.response && error?.response?.status === 404) {
       logger.warn("Room not found", { roomId });
       throw new CustomError("Room not found", 404);
     }

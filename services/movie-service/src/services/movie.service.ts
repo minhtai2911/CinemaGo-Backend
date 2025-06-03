@@ -55,7 +55,7 @@ export const createCategory = async (name: string, description: string) => {
   });
   if (existingCategory) {
     logger.warn("Category already exists", { name });
-    throw new CustomError("Category already exists", 400);
+    throw new CustomError("Category already exists", 409);
   }
   const category = await prisma.category.create({
     data: { name, description },
@@ -179,7 +179,7 @@ export const createMovie = async (
   });
   if (existingMovie) {
     logger.warn("Movie already exists", { title });
-    throw new CustomError("Movie already exists", 400);
+    throw new CustomError("Movie already exists", 409);
   }
 
   const thumbnailUpload = await uploadImageToCloudinary(thumbnailUrl);

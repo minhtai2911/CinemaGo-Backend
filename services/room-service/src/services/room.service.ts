@@ -63,7 +63,7 @@ export const createRoom = async (
   });
   if (existingRoom) {
     logger.warn("Room already exists", { name, cinemaId });
-    throw new CustomError("Room already exists", 400);
+    throw new CustomError("Room already exists", 409);
   }
   const room = await prisma.room.create({
     data: { name, cinemaId, totalSeats: seatLayout.length, seatLayout },

@@ -43,16 +43,16 @@ export const getCinemaById = async (cinemaId: string) => {
   return cinema;
 };
 
-export const createCinema = async (name: string, address: string) => {
+export const createCinema = async (name: string, address: string, city: string) => {
   const existingCinema = await prisma.cinema.findUnique({
     where: { name },
   });
   if (existingCinema) {
     logger.warn("Cinema already exists", { name });
-    throw new CustomError("Cinema already exists", 400);
+    throw new CustomError("Cinema already exists", 409);
   }
   const cinema = await prisma.cinema.create({
-    data: { name, address },
+    data: { name, address, city },
   });
   logger.info("Created cinema", { cinema });
   return cinema;
@@ -60,7 +60,7 @@ export const createCinema = async (name: string, address: string) => {
 
 export const updateCinemaById = async (
   cinemaId: string,
-  data: { name: string; address: string }
+  data: { name: string; address: string; city: string }
 ) => {
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },

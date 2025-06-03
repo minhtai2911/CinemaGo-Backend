@@ -18,6 +18,7 @@ model Cinema {
   id        String   @id @default(uuid())
   name      String   @unique
   address   String
+  city      String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
