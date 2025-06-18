@@ -15,19 +15,19 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(uuid())
-  email             String             @unique
+  id                String              @id @default(uuid())
+  email             String              @unique
   password          String
   fullname          String
-  role              Role               @default(USER)
-  avatarUrl         String             @default("https://res.cloudinary.com/dffy6tds8/image/upload/v1744127926/avatar_kn6ynb.jpg")
-  publicId          String             @default("avatar_kn6ynb")
-  isActive          Boolean            @default(false)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  role              Role                @default(USER)
+  avatarUrl         String              @default("https://res.cloudinary.com/dffy6tds8/image/upload/v1744127926/avatar_kn6ynb.jpg")
+  publicId          String              @default("avatar_kn6ynb")
+  isActive          Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
   refreshTokens     RefreshToken[]
-  VerificationToken VerificationToken?
-  OTP               OTP?
+  VerificationToken VerificationToken[]
+  OTP               OTP[]
 
   @@index([email], name: "idx_users_email")
   @@index([role], name: "idx_users_role")
@@ -48,7 +48,7 @@ model RefreshToken {
 
 model OTP {
   id        String   @id @default(uuid())
-  userId    String   @unique
+  userId    String
   otp       String
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -60,7 +60,7 @@ model OTP {
 
 model VerificationToken {
   id        String   @id @default(uuid())
-  userId    String   @unique
+  userId    String
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
