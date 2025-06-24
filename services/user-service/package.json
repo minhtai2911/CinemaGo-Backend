@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "npx nodemon",
-    "build": "rimraf ./dist && tsc && tsc-alias",
-    "start": "nodemon src/server.ts"
+    "build": "rimraf ./dist && tsc && tsc-alias"
   },
   "keywords": [],
   "author": "",
