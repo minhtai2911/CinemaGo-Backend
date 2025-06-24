@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import * as MovieService from "../services/movie.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
-export const getCategories = asyncHandler(
+export const getGenres = asyncHandler(
   async (req: Request, res: Response) => {
     const { page, limit, search } = req.query;
     const pageNumber = Number(page) || 1;
     const limitNumber = Number(limit) || 10;
-    const { categories, totalItems, totalPages } =
-      await MovieService.getCategories({
+    const { genres, totalItems, totalPages } =
+      await MovieService.getGenres({
         page: pageNumber,
         limit: limitNumber,
         search: String(search) || "",
@@ -22,69 +22,69 @@ export const getCategories = asyncHandler(
         hasNextPage: pageNumber < totalPages,
         hasPrevPage: pageNumber > 1,
       },
-      data: categories,
+      data: genres,
     });
   }
 );
 
-export const getCategoryById = asyncHandler(
+export const getGenreById = asyncHandler(
   async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const category = await MovieService.getCategoryById(categoryId);
-    res.status(200).json({ data: category });
+    const genreId = req.params.genreId;
+    const genre = await MovieService.getGenreById(genreId);
+    res.status(200).json({ data: genre });
   }
 );
 
-export const createCategory = asyncHandler(
+export const createGenre = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, description } = req.body;
     if (!name || !description) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const category = await MovieService.createCategory(name, description);
-    res.status(201).json({ data: category });
+    const genre = await MovieService.createGenre(name, description);
+    res.status(201).json({ data: genre });
   }
 );
 
-export const updateCategoryById = asyncHandler(
+export const updateGenreById = asyncHandler(
   async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
+    const genreId = req.params.genreId;
     const { name, description } = req.body;
     if (!name || !description) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const category = await MovieService.updateCategoryById(
-      categoryId,
+    const genre = await MovieService.updateGenreById(
+      genreId,
       name,
       description
     );
-    res.status(200).json({ data: category });
+    res.status(200).json({ data: genre });
   }
 );
 
-export const archiveCategoryById = asyncHandler(
+export const archiveGenreById = asyncHandler(
   async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const message = await MovieService.archiveCategoryById(categoryId);
+    const genreId = req.params.genreId;
+    const message = await MovieService.archiveGenreById(genreId);
     res.status(200).json(message);
   }
 );
 
-export const restoreCategoryById = asyncHandler(
+export const restoreGenreById = asyncHandler(
   async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const message = await MovieService.restoreCategoryById(categoryId);
+    const genreId = req.params.genreId;
+    const message = await MovieService.restoreGenreById(genreId);
     res.status(200).json(message);
   }
 );
 
 export const getMovies = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, categoryId, rating } = req.query;
+  const { page, limit, search, genreId, rating } = req.query;
   const { movies, totalItems, totalPages } = await MovieService.getMovies({
     page: Number(page) || 1,
     limit: Number(limit) || 10,
     search: String(search) || "",
-    categoryId: String(categoryId) || undefined,
+    genreId: String(genreId) || undefined,
     rating: Number(rating) || undefined,
   });
   res.status(200).json({
@@ -109,7 +109,7 @@ export const getMovieById = asyncHandler(
 );
 
 export const createMovie = asyncHandler(async (req: Request, res: Response) => {
-  const { title, description, duration, releaseDate, categories } = req.body;
+  const { title, description, duration, releaseDate, genres } = req.body;
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
@@ -122,7 +122,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     !description ||
     !duration ||
     !releaseDate ||
-    !categories ||
+    !genres ||
     !thumbnailUrl ||
     !trailerUrl
   ) {
@@ -133,7 +133,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     description,
     duration,
     new Date(releaseDate),
-    categories,
+    genres,
     thumbnailUrl,
     trailerUrl
   );
@@ -143,7 +143,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
 export const updateMovieById = asyncHandler(
   async (req: Request, res: Response) => {
     const movieId = req.params.movieId;
-    const { title, description, duration, releaseDate, categories } = req.body;
+    const { title, description, duration, releaseDate, genres } = req.body;
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
@@ -162,8 +162,8 @@ export const updateMovieById = asyncHandler(
       releaseDate: new Date(releaseDate),
     };
 
-    if (categories) {
-      data.categories = categories;
+    if (genres) {
+      data.genres = genres;
     }
     if (thumbnailUrl) {
       data.thumbnailUrl = thumbnailUrl;

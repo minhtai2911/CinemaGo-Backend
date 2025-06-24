@@ -8,7 +8,7 @@ import {
 import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
 
-export const getCategories = async ({
+export const getGenres = async ({
   page = 1,
   limit = 10,
   search = "",
@@ -17,55 +17,61 @@ export const getCategories = async ({
   limit?: number;
   search?: string;
 }) => {
-  const categories = await prisma.category.findMany({
+  // Fetch genres with pagination and search
+  const genres = await prisma.genres.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
     },
     skip: (page - 1) * limit,
     take: limit,
   });
-  const totalItems = await prisma.category.count({
+  // Count total items for pagination
+  const totalItems = await prisma.genres.count({
     where: {
       name: { contains: search, mode: "insensitive" },
     },
   });
-  logger.info("Fetched categories", { categories, totalItems, page, limit });
+  logger.info("Fetched genres", { genres, totalItems, page, limit });
   return {
-    categories,
+    genres,
     totalItems,
     totalPages: Math.ceil(totalItems / limit),
   };
 };
 
-export const getCategoryById = async (categoryId: string) => {
-  const category = await prisma.category.findUnique({
-    where: { id: categoryId },
+export const getGenreById = async (genreId: string) => {
+  // Fetch genre by ID
+  const genre = await prisma.genres.findUnique({
+    where: { id: genreId },
   });
-  if (!category) {
-    logger.warn("Category not found", { categoryId });
-    throw new CustomError("Category not found", 404);
+  // Check if genre exists
+  if (!genre) {
+    logger.warn("Genre not found", { genreId });
+    throw new CustomError("Genre not found", 404);
   }
-  logger.info("Fetched category", { category });
-  return category;
+  logger.info("Fetched genre", { genre });
+  return genre;
 };
 
-export const createCategory = async (name: string, description: string) => {
-  const existingCategory = await prisma.category.findUnique({
+export const createGenre = async (name: string, description: string) => {
+  // Check if genre already exists
+  const existingGenre = await prisma.genres.findUnique({
     where: { name },
   });
-  if (existingCategory) {
-    logger.warn("Category already exists", { name });
-    throw new CustomError("Category already exists", 409);
+  if (existingGenre) {
+    logger.warn("Genre already exists", { name });
+    throw new CustomError("Genre already exists", 409);
   }
-  const category = await prisma.category.create({
+  // Create new genre
+  const genre = await prisma.genres.create({
     data: { name, description },
   });
-  logger.info("Created category", { category });
-  return category;
+  logger.info("Created genre", { genre });
+  return genre;
 };
 
-export const updateCategoryById = async (
-  categoryId: string,
+export const updateGenreById = async (
+  genreId: string,
   name: string,
   description: string
 ) => {
@@ -73,60 +79,74 @@ export const updateCategoryById = async (
     name,
     description,
   };
-  const updatedCategory = await prisma.category.update({
-    where: { id: categoryId },
+  // Check if name is already taken
+  const nameExists = await prisma.genres.findUnique({
+    where: { name },
+  });
+  if (nameExists && nameExists.id !== genreId) {
+    logger.warn("Genre name already exists", { name });
+    throw new CustomError("Genre name already exists", 409);
+  }
+  // Update genre
+  const updatedGenre = await prisma.genres.update({
+    where: { id: genreId },
     data: updateData,
   });
-  if (!updatedCategory) {
-    logger.warn("Category not found for update", { categoryId });
-    throw new CustomError("Category not found", 404);
+  if (!updatedGenre) {
+    logger.warn("Genre not found for update", { genreId });
+    throw new CustomError("Genre not found", 404);
   }
-  logger.info("Updated category", { updatedCategory });
-  return updatedCategory;
+  logger.info("Updated genre", { updatedGenre });
+  return updatedGenre;
 };
 
-export const archiveCategoryById = async (categoryId: string) => {
-  const archivedCategory = await prisma.category.update({
-    where: { id: categoryId },
+export const archiveGenreById = async (genreId: string) => {
+  // Archive genre by setting isActive to false
+  const archivedGenre = await prisma.genres.update({
+    where: { id: genreId },
     data: { isActive: false },
   });
-  if (!archivedCategory) {
-    logger.warn("Category not found for archiving", { categoryId });
-    throw new CustomError("Category not found", 404);
+  // Check if genre exists
+  if (!archivedGenre) {
+    logger.warn("Genre not found for archiving", { genreId });
+    throw new CustomError("Genre not found", 404);
   }
-  logger.info("Archived category", { archivedCategory });
-  return { message: "Category archived successfully" };
+  logger.info("Archived genre", { archivedGenre });
+  return { message: "Genre archived successfully" };
 };
 
-export const restoreCategoryById = async (categoryId: string) => {
-  const category = await prisma.category.update({
-    where: { id: categoryId },
+export const restoreGenreById = async (genreId: string) => {
+  // Restore genre by setting isActive to true
+  const genre = await prisma.genres.update({
+    where: { id: genreId },
     data: { isActive: true },
   });
-  if (!category) {
-    logger.warn("Category not found for restoring", { categoryId });
-    throw new CustomError("Category not found", 404);
+  // Check if genre exists
+  if (!genre) {
+    logger.warn("Genre not found for restoring", { genreId });
+    throw new CustomError("Genre not found", 404);
   }
-  logger.info("Restored category", { category });
-  return { message: "Category restored successfully" };
+  logger.info("Restored genre", { genre });
+  return { message: "Genre restored successfully" };
 };
 
 export const getMovies = async ({
   page = 1,
   limit = 10,
   search = "",
-  categoryId,
+  genreId,
   rating,
 }: {
   page?: number;
   limit?: number;
   search?: string;
-  categoryId?: string;
+  genreId?: string;
   rating?: number;
 }) => {
+  // Fetch movies with pagination, search, genre filter, and rating filter
   const where: any = {};
-  if (categoryId) {
-    where.categoryId = categoryId;
+  if (genreId) {
+    where.genreId = genreId;
   }
   if (rating) {
     where.rating = {
@@ -138,10 +158,11 @@ export const getMovies = async ({
   }
   const movies = await prisma.movie.findMany({
     where,
-    include: { categories: true },
+    include: { genres: true },
     skip: (page - 1) * limit,
     take: limit,
   });
+  // Count total items for pagination
   const totalItems = await prisma.movie.count({ where });
 
   logger.info("Fetched movies", { movies, totalItems, page, limit });
@@ -153,10 +174,12 @@ export const getMovies = async ({
 };
 
 export const getMovieById = async (movieId: string) => {
+  // Fetch movie by ID with genres
   const movie = await prisma.movie.findUnique({
     where: { id: movieId },
-    include: { categories: true },
+    include: { genres: true },
   });
+  // Check if movie exists
   if (!movie) {
     logger.warn("Movie not found", { movieId });
     throw new CustomError("Movie not found", 404);
@@ -170,13 +193,15 @@ export const createMovie = async (
   description: string,
   duration: number,
   releaseDate: Date,
-  categories: string[],
+  genres: string[],
   thumbnailUrl: string,
   trailerUrl: string
 ) => {
+  // Check if movie already exists
   const existingMovie = await prisma.movie.findUnique({
     where: { title },
   });
+  // If movie exists, throw an error
   if (existingMovie) {
     logger.warn("Movie already exists", { title });
     throw new CustomError("Movie already exists", 409);
@@ -185,6 +210,7 @@ export const createMovie = async (
   const thumbnailUpload = await uploadImageToCloudinary(thumbnailUrl);
   const trailerUpload = await uploadVideoToCloudinary(trailerUrl);
 
+  // Check if uploads were successful
   if (!thumbnailUpload || !trailerUpload) {
     logger.error("Failed to upload media to Cloudinary", {
       thumbnailUrl,
@@ -193,6 +219,7 @@ export const createMovie = async (
     throw new CustomError("Failed to upload media", 500);
   }
 
+  // Create movie with uploaded media and genres
   const movie = await prisma.movie.create({
     data: {
       title,
@@ -203,8 +230,8 @@ export const createMovie = async (
       thumbnailPublicId: thumbnailUpload.public_id,
       trailerUrl: trailerUpload.secure_url,
       trailerPublicId: trailerUpload.public_id,
-      categories: {
-        connect: categories.map((id) => ({ id })),
+      genres: {
+        connect: genres.map((id) => ({ id })),
       },
     },
   });
@@ -220,11 +247,12 @@ export const updateMovieById = async (
     description: string;
     duration: number;
     releaseDate: Date;
-    categories?: string[];
+    genres?: string[];
     thumbnail?: string;
     trailerUrl?: string;
   }
 ) => {
+  // Check if movie exists
   const movie = await prisma.movie.findUnique({
     where: { id: movieId },
   });
@@ -283,13 +311,13 @@ export const updateMovieById = async (
     updateData.trailerUrl = trailerUpload.secure_url;
     updateData.trailerPublicId = trailerUpload.public_id;
   }
-  // Update categories if provided
-  if (data.categories) {
-    updateData.categories = {
-      set: data.categories.map((id) => ({ id })),
+  // Update genres if provided
+  if (data.genres && data.genres.length > 0) {
+    updateData.genres = {
+      set: data.genres.map((id) => ({ id })),
     };
   }
-  // Handle categories update
+  // Handle genres update
   const updatedMovie = await prisma.movie.update({
     where: { id: movieId },
     data: updateData,
