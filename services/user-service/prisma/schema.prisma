@@ -19,6 +19,7 @@ model User {
   email             String              @unique
   password          String
   fullname          String
+  gender            String
   role              Role                @default(USER)
   avatarUrl         String              @default("https://res.cloudinary.com/dffy6tds8/image/upload/v1744127926/avatar_kn6ynb.jpg")
   publicId          String              @default("avatar_kn6ynb")

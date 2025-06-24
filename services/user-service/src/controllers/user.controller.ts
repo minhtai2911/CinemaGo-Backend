@@ -33,14 +33,15 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const { email, fullname, password, role } = req.body;
-  if (!email || !fullname || !password || !role) {
+  const { email, fullname, password, role, gender } = req.body;
+  if (!email || !fullname || !password || !role || !gender) {
     return res.status(400).json({ message: "All fields are required" });
   }
   const user = await UserService.createUser({
     email,
     fullname,
     password,
+    gender,
     role,
   });
   res.status(201).json({ data: user, message: "User created successfully" });
@@ -49,14 +50,15 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 export const updateUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
-    const { fullname, role, password } = req.body;
-    if (!fullname || !role) {
+    const { fullname, role, password, gender } = req.body;
+    if (!fullname || !role || !gender) {
       return res.status(400).json({ message: "All fields are required" });
     }
     const user = await UserService.updateUserById(userId, {
       fullname,
       password,
       role,
+      gender,
     });
     res.status(200).json({ data: user, message: "User updated successfully" });
   }
@@ -95,12 +97,19 @@ export const updateProfile = asyncHandler(
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const { fullname } = req.body;
+    const { fullname, gender } = req.body;
     const avatarUrl = req.file?.path;
-    if (!fullname) {
-      return res.status(400).json({ message: "Fullname is required" });
+    if (!fullname || !gender) {
+      return res
+        .status(400)
+        .json({ message: "Fullname and gender are required" });
     }
-    const user = await UserService.updateProfile(userId, fullname, avatarUrl);
+    const user = await UserService.updateProfile(
+      userId,
+      fullname,
+      gender,
+      avatarUrl
+    );
     res
       .status(200)
       .json({ data: user, message: "Profile updated successfully" });

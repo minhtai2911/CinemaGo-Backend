@@ -16,11 +16,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const signup = asyncHandler(async (req: Request, res: Response) => {
-  const { email, fullname, password } = req.body;
-  if (!email || !fullname || !password) {
+  const { email, fullname, password, gender } = req.body;
+  if (!email || !fullname || !password || !gender) {
     return res.status(400).json({ message: "All fields are required" });
   }
-  const user = await AuthService.signup(email, password, fullname);
+  const user = await AuthService.signup(email, password, gender, fullname);
   res.status(201).json({ data: user, message: "User created successfully" });
 });
 
