@@ -14,6 +14,7 @@ export const getShowtimes = async ({
   movieId?: string;
   cinemaId?: string;
 }) => {
+  // Fetch showtimes with pagination and filters
   const where: any = {};
   if (movieId) {
     where.movieId = movieId;
@@ -26,6 +27,7 @@ export const getShowtimes = async ({
     skip: (page - 1) * limit,
     take: limit,
   });
+  // Count total items for pagination
   const totalItems = await prisma.showtime.count({ where });
 
   logger.info("Fetched showtimes", { showtimes, totalItems, page, limit });
@@ -37,9 +39,11 @@ export const getShowtimes = async ({
 };
 
 export const getShowtimeById = async (showtimeId: string) => {
+  // Fetch a single showtime by ID
   const showtime = await prisma.showtime.findUnique({
     where: { id: showtimeId },
   });
+  // If showtime not found, throw an error
   if (!showtime) {
     logger.warn("Showtime not found", { showtimeId });
     throw new CustomError("Showtime not found", 404);
@@ -58,6 +62,7 @@ export const createShowtime = async (
   subtitle: boolean,
   format: string
 ) => {
+  // Check if the showtime overlaps with existing showtimes
   const existingShowtime = await prisma.showtime.findFirst({
     where: {
       roomId,
@@ -69,6 +74,7 @@ export const createShowtime = async (
     logger.warn("Showtime conflict", { existingShowtime });
     throw new CustomError("Showtime conflict", 409);
   }
+  // Check if the room exists
   let room;
   try {
     room = await axios.get(`${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`);
@@ -80,10 +86,7 @@ export const createShowtime = async (
     logger.error("Failed to fetch room", { roomId, error });
     throw new CustomError("Failed to fetch room", 500);
   }
-  if (!room.data) {
-    logger.warn("Room not found", { roomId });
-    throw new CustomError("Room not found", 404);
-  }
+  // Create the showtime
   const showtime = await prisma.showtime.create({
     data: {
       movieId,
@@ -120,6 +123,24 @@ export const updateShowtimeById = async (
   }
   if (data.roomId) {
     updateShowtime.roomId = data.roomId;
+    // Check if the new room exists
+    let room;
+    try {
+      room = await axios.get(
+        `${process.env.ROOM_SERVICE_URL}/rooms/${data.roomId}`
+      );
+    } catch (error: any) {
+      if (error?.response && error?.response?.status === 404) {
+        logger.warn("Room not found for update", { roomId: data.roomId });
+        throw new CustomError("Room not found", 404);
+      }
+      logger.error("Failed to fetch room for update", {
+        roomId: data.roomId,
+        error,
+      });
+      throw new CustomError("Failed to fetch room", 500);
+    }
+    updateShowtime.cinemaId = room.data.cinemaId;
   }
   if (data.startTime) {
     updateShowtime.startTime = data.startTime;
@@ -139,6 +160,7 @@ export const updateShowtimeById = async (
   if (data.format) {
     updateShowtime.format = data.format;
   }
+  // Update the showtime
   const showtime = await prisma.showtime.update({
     where: { id: showtimeId },
     data: updateShowtime,
@@ -148,9 +170,11 @@ export const updateShowtimeById = async (
 };
 
 export const deleteShowtimeById = async (showtimeId: string) => {
+  // Delete a showtime by ID
   const showtime = await prisma.showtime.delete({
     where: { id: showtimeId },
   });
+  // If showtime not found, throw an error
   if (!showtime) {
     logger.warn("Showtime not found for deletion", { showtimeId });
     throw new CustomError("Showtime not found", 404);
