@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import helmet from "helmet";
 import logger from "./utils/logger.js";
 import cinemaRoutes from "./routes/cinema.routes.js";
+import roomRoutes from "./routes/room.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/v1/cinemas", cinemaRoutes);
+app.use("/api/v1/rooms", roomRoutes);
 
 app.use(errorHandler);
 

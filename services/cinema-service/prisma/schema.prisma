@@ -22,6 +22,36 @@ model Cinema {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Room      Room[]
 
   @@map("cinemas")
+}
+
+model Room {
+  id         String   @id @default(uuid())
+  name       String
+  cinemaId   String
+  cinema     Cinema   @relation(fields: [cinemaId], references: [id])
+  totalSeats Int
+  seatLayout Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Seat       Seat[]
+
+  @@unique([cinemaId, name])
+  @@map("rooms")
+}
+
+model Seat {
+  id         String   @id @default(uuid())
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id])
+  seatNumber String
+  seatType   String   @default("NORMAL")
+  extraPrice Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([roomId, seatNumber])
+  @@map("seats")
 }

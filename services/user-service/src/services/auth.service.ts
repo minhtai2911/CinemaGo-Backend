@@ -9,12 +9,16 @@ import { CustomError } from "../utils/customError.js";
 export const signup = async (
   email: string,
   password: string,
+  gender: string,
   fullname: string
 ) => {
   // Validate input
-  if (!email || !password || !fullname) {
-    logger.warn("Email, password, and fullname are required");
-    throw new CustomError("Email, password, and fullname are required", 400);
+  if (!email || !password || !fullname || !gender) {
+    logger.warn("Email, password, fullname, and gender are required");
+    throw new CustomError(
+      "Email, password, fullname, and gender are required",
+      400
+    );
   }
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -36,6 +40,7 @@ export const signup = async (
       email,
       password: hashedPassword,
       fullname,
+      gender,
     },
   });
   logger.info("User created successfully", {

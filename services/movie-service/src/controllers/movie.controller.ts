@@ -2,89 +2,18 @@ import { Request, Response } from "express";
 import * as MovieService from "../services/movie.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
-export const getCategories = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { page, limit, search } = req.query;
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 10;
-    const { categories, totalItems, totalPages } =
-      await MovieService.getCategories({
-        page: pageNumber,
-        limit: limitNumber,
-        search: String(search) || "",
-      });
-    res.status(200).json({
-      pagination: {
-        totalItems,
-        totalPages,
-        currentPage: pageNumber,
-        pageSize: limitNumber,
-        hasNextPage: pageNumber < totalPages,
-        hasPrevPage: pageNumber > 1,
-      },
-      data: categories,
-    });
-  }
-);
-
-export const getCategoryById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const category = await MovieService.getCategoryById(categoryId);
-    res.status(200).json({ data: category });
-  }
-);
-
-export const createCategory = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { name, description } = req.body;
-    if (!name || !description) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-    const category = await MovieService.createCategory(name, description);
-    res.status(201).json({ data: category });
-  }
-);
-
-export const updateCategoryById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const { name, description } = req.body;
-    if (!name || !description) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-    const category = await MovieService.updateCategoryById(
-      categoryId,
-      name,
-      description
-    );
-    res.status(200).json({ data: category });
-  }
-);
-
-export const archiveCategoryById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const message = await MovieService.archiveCategoryById(categoryId);
-    res.status(200).json(message);
-  }
-);
-
-export const restoreCategoryById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const categoryId = req.params.categoryId;
-    const message = await MovieService.restoreCategoryById(categoryId);
-    res.status(200).json(message);
-  }
-);
-
 export const getMovies = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, categoryId, rating } = req.query;
+  const { page, limit, search, rating, genreQuery } = req.query;
+  let genreIds: string[] = [];
+  if (genreQuery) {
+    genreIds = (genreQuery as string).split(",").map((id: string) => id.trim());
+  }
+
   const { movies, totalItems, totalPages } = await MovieService.getMovies({
     page: Number(page) || 1,
     limit: Number(limit) || 10,
     search: String(search) || "",
-    categoryId: String(categoryId) || undefined,
+    genreIds: genreIds.length > 0 ? genreIds : undefined,
     rating: Number(rating) || undefined,
   });
   res.status(200).json({
@@ -109,7 +38,7 @@ export const getMovieById = asyncHandler(
 );
 
 export const createMovie = asyncHandler(async (req: Request, res: Response) => {
-  const { title, description, duration, releaseDate, categories } = req.body;
+  const { title, description, duration, releaseDate, genres } = req.body;
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
@@ -122,7 +51,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     !description ||
     !duration ||
     !releaseDate ||
-    !categories ||
+    !genres ||
     !thumbnailUrl ||
     !trailerUrl
   ) {
@@ -133,7 +62,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     description,
     duration,
     new Date(releaseDate),
-    categories,
+    genres,
     thumbnailUrl,
     trailerUrl
   );
@@ -143,7 +72,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
 export const updateMovieById = asyncHandler(
   async (req: Request, res: Response) => {
     const movieId = req.params.movieId;
-    const { title, description, duration, releaseDate, categories } = req.body;
+    const { title, description, duration, releaseDate, genres } = req.body;
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
@@ -162,8 +91,8 @@ export const updateMovieById = asyncHandler(
       releaseDate: new Date(releaseDate),
     };
 
-    if (categories) {
-      data.categories = categories;
+    if (genres) {
+      data.genres = genres;
     }
     if (thumbnailUrl) {
       data.thumbnailUrl = thumbnailUrl;
@@ -177,10 +106,18 @@ export const updateMovieById = asyncHandler(
   }
 );
 
-export const deleteMovieById = asyncHandler(
+export const archiveMovieById = asyncHandler(
   async (req: Request, res: Response) => {
     const movieId = req.params.movieId;
-    const message = await MovieService.deleteMovieById(movieId);
+    const message = await MovieService.archiveMovieById(movieId);
+    res.status(200).json(message);
+  }
+);
+
+export const restoreMovieById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const movieId = req.params.movieId;
+    const message = await MovieService.restoreMovieById(movieId);
     res.status(200).json(message);
   }
 );

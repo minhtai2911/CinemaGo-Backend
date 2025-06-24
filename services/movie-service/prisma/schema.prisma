@@ -15,25 +15,26 @@ datasource db {
 }
 
 model Movie {
-  id                String     @id @default(uuid())
-  title             String     @unique
+  id                String   @id @default(uuid())
+  title             String   @unique
   description       String
   duration          Int
   releaseDate       DateTime
-  rating            Float      @default(0.0)
+  rating            Float    @default(0.0)
   thumbnail         String
   thumbnailPublicId String
   trailerUrl        String
   trailerPublicId   String
-  categories        Category[]
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  genres            Genres[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([title], name: "idx_movie_title")
   @@map("movies")
 }
 
-model Category {
+model Genres {
   id          String   @id @default(uuid())
   name        String   @unique
   description String
@@ -42,6 +43,6 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([name], name: "idx_category_name")
-  @@map("categories")
+  @@index([name], name: "idx_genres_name")
+  @@map("genres")
 }

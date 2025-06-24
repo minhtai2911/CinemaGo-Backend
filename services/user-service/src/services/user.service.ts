@@ -67,6 +67,7 @@ export const createUser = async (userData: {
   email: string;
   fullname: string;
   password: string;
+  gender: string;
   role: Role;
 }) => {
   // Check if user already exists
@@ -93,6 +94,7 @@ export const updateUserById = async (
     fullname: string;
     password?: string;
     role: Role;
+    gender: string;
   }
 ) => {
   // Hash the password
@@ -155,6 +157,7 @@ export const getProfile = async (userId: string) => {
 export const updateProfile = async (
   userId: string,
   fullname: string,
+  gender: string,
   avatarUrl?: string
 ) => {
   const user = await prisma.user.findUnique({
@@ -182,6 +185,7 @@ export const updateProfile = async (
     where: { id: userId },
     data: {
       fullname: fullname || user.fullname,
+      gender: gender || user.gender,
       avatarUrl,
       publicId: uploadResult?.public_id || user.publicId,
     },

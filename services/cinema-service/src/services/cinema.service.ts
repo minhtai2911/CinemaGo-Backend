@@ -11,6 +11,7 @@ export const getCinemas = async ({
   limit?: number;
   search?: string;
 }) => {
+  // Fetch cinemas with pagination and search functionality
   const cinemas = await prisma.cinema.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
@@ -18,6 +19,7 @@ export const getCinemas = async ({
     skip: (page - 1) * limit,
     take: limit,
   });
+  // Count total items for pagination
   const totalItems = await prisma.cinema.count({
     where: {
       name: { contains: search, mode: "insensitive" },
@@ -32,9 +34,11 @@ export const getCinemas = async ({
 };
 
 export const getCinemaById = async (cinemaId: string) => {
+  // Fetch a cinema by its ID
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },
   });
+  // If cinema not found, throw a custom error
   if (!cinema) {
     logger.warn("Cinema not found", { cinemaId });
     throw new CustomError("Cinema not found", 404);
@@ -43,7 +47,12 @@ export const getCinemaById = async (cinemaId: string) => {
   return cinema;
 };
 
-export const createCinema = async (name: string, address: string, city: string) => {
+export const createCinema = async (
+  name: string,
+  address: string,
+  city: string
+) => {
+  // Check if cinema already exists
   const existingCinema = await prisma.cinema.findUnique({
     where: { name },
   });
@@ -51,6 +60,7 @@ export const createCinema = async (name: string, address: string, city: string) 
     logger.warn("Cinema already exists", { name });
     throw new CustomError("Cinema already exists", 409);
   }
+  // Create a new cinema
   const cinema = await prisma.cinema.create({
     data: { name, address, city },
   });
@@ -62,6 +72,7 @@ export const updateCinemaById = async (
   cinemaId: string,
   data: { name: string; address: string; city: string }
 ) => {
+  // Check if cinema exists before updating
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },
   });
@@ -69,6 +80,7 @@ export const updateCinemaById = async (
     logger.warn("Cinema not found", { cinemaId });
     throw new CustomError("Cinema not found", 404);
   }
+  // Update the cinema with the provided data
   const updatedCinema = await prisma.cinema.update({
     where: { id: cinemaId },
     data,
@@ -78,6 +90,7 @@ export const updateCinemaById = async (
 };
 
 export const archiveCinemaById = async (cinemaId: string) => {
+  // Check if cinema exists before archiving
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },
   });
@@ -85,6 +98,7 @@ export const archiveCinemaById = async (cinemaId: string) => {
     logger.warn("Cinema not found for archiving", { cinemaId });
     throw new CustomError("Cinema not found", 404);
   }
+  // Archive the cinema by setting isActive to false
   const archivedCinema = await prisma.cinema.update({
     where: { id: cinemaId },
     data: { isActive: false },
@@ -94,6 +108,7 @@ export const archiveCinemaById = async (cinemaId: string) => {
 };
 
 export const restoreCinemaById = async (cinemaId: string) => {
+  // Check if cinema exists before restoring
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },
   });
@@ -101,6 +116,7 @@ export const restoreCinemaById = async (cinemaId: string) => {
     logger.warn("Cinema not found for restoration", { cinemaId });
     throw new CustomError("Cinema not found", 404);
   }
+  // Restore the cinema by setting isActive to true
   const restoredCinema = await prisma.cinema.update({
     where: { id: cinemaId },
     data: { isActive: true },
@@ -108,5 +124,3 @@ export const restoreCinemaById = async (cinemaId: string) => {
   logger.info("Restored cinema", { restoredCinema });
   return { message: "Cinema restored successfully" };
 };
-
-
