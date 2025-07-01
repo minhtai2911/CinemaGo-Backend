@@ -182,40 +182,30 @@ export const holdSeat = async (
   seatId: string
 ) => {
   const key = `hold:${showtimeId}:${seatId}`;
-  const existingHold = await redisClient.get(key);
-  // If seats are already held, throw a custom error
-  if (existingHold) {
-    logger.warn("Seats already held", { showtimeId, seatId });
-    throw new CustomError("Seats already held", 409);
-  }
-  const seat = await prisma.seat.findUnique({
-    where: { id: seatId },
-  });
-  // If seat not found, throw a custom error
+  const seat = await prisma.seat.findUnique({ where: { id: seatId } });
+
   if (!seat) {
-    logger.warn("Seat not found", { seatId });
     throw new CustomError("Seat not found", 404);
   }
-  // Set the hold in Redis with a 5-minute expiration
-  await redisClient.setex(
+
+  const result = await redisClient.set(
     key,
-    300,
     JSON.stringify({
       userId,
       showtimeId,
       seatId,
-      extraPrice: seat?.extraPrice || 0,
-    })
+      extraPrice: seat.extraPrice || 0,
+    }),
+    "NX",
+    "EX",
+    300 // 5 minutes
   );
-  logger.info("Held seats", {
-    userId,
-    showtimeId,
-    seatId,
-    extraPrice: seat?.extraPrice || 0,
-  });
-  return {
-    message: "Seats held successfully",
-  };
+
+  if (result !== "OK") {
+    throw new CustomError("Seat already held", 409);
+  }
+
+  return { message: "Seats held successfully" };
 };
 
 export const getHeldSeats = async (redisClient: any, showtimeId: string) => {
