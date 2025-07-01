@@ -174,3 +174,45 @@ export const deleteRoomById = async (roomId: string) => {
   logger.info("Deleted room", { deletedRoom });
   return { message: "Room deleted successfully" };
 };
+
+export const holdSeat = async (
+  userId: string,
+  showtimeId: string,
+  seatId: string
+) => {
+  const key = `hold:${showtimeId}:${seatId}`;
+  const existingHold = await (global as any).redisClient.get(key);
+  // If seats are already held, throw a custom error
+  if (existingHold) {
+    logger.warn("Seats already held", { showtimeId, seatId });
+    throw new CustomError("Seats already held", 409);
+  }
+  const seat = await prisma.seat.findUnique({
+    where: { id: seatId },
+  });
+  // If seat not found, throw a custom error
+  if (!seat) {
+    logger.warn("Seat not found", { seatId });
+    throw new CustomError("Seat not found", 404);
+  }
+  // Set the hold in Redis with a 5-minute expiration
+  await (global as any).redisClient.setex(
+    key,
+    300,
+    JSON.stringify({
+      userId,
+      showtimeId,
+      seatId,
+      extraPrice: seat?.extraPrice || 0,
+    })
+  );
+  logger.info("Held seats", {
+    userId,
+    showtimeId,
+    seatId,
+    extraPrice: seat?.extraPrice || 0,
+  });
+  return {
+    message: "Seats held successfully",
+  };
+};

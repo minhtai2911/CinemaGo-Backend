@@ -24,5 +24,10 @@ router.delete(
   authorizeRole("ADMIN"),
   RoomController.deleteRoomById
 );
+router.post(
+  "/hold-seat",
+  verifyToken,
+  RoomController.holdSeat
+);
 
 export default router;

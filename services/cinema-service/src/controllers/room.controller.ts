@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as roomService from "../services/room.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getRooms = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search } = req.query;
@@ -69,5 +70,17 @@ export const deleteRoomById = asyncHandler(
     const roomId = req.params.id;
     await roomService.deleteRoomById(roomId);
     res.status(204).send();
+  }
+);
+
+export const holdSeat = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { showtimeId, seatId } = req.body;
+    const userId = req.user?.userId;
+    if (!showtimeId || !seatId || !userId) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    const message = await roomService.holdSeat(userId, showtimeId, seatId);
+    res.status(200).json(message);
   }
 );

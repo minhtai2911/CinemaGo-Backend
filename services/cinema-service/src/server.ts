@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import helmet from "helmet";
+import { Redis } from "ioredis";
 import logger from "./utils/logger.js";
 import cinemaRoutes from "./routes/cinema.routes.js";
 import roomRoutes from "./routes/room.routes.js";
@@ -10,6 +11,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 
 dotenv.config();
 
+const redisClient = new Redis(process.env.REDIS_URL as string);
 const PORT = process.env.PORT || 8003;
 const app = express();
 
@@ -26,7 +28,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/v1/cinemas", cinemaRoutes);
-app.use("/api/v1/rooms", roomRoutes);
+app.use(
+  "/api/v1/rooms",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    (req as any).redisClient = redisClient;
+    next();
+  },
+  roomRoutes
+);
 
 app.use(errorHandler);
 
