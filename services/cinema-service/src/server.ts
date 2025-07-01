@@ -10,6 +10,13 @@ import roomRoutes from "./routes/room.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 dotenv.config();
+declare global {
+  namespace Express {
+    interface Request {
+      redisClient?: Redis;
+    }
+  }
+}
 
 const redisClient = new Redis(process.env.REDIS_URL as string);
 const PORT = process.env.PORT || 8003;
@@ -31,7 +38,7 @@ app.use("/api/v1/cinemas", cinemaRoutes);
 app.use(
   "/api/v1/rooms",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    (req as any).redisClient = redisClient;
+    req.redisClient = redisClient;
     next();
   },
   roomRoutes

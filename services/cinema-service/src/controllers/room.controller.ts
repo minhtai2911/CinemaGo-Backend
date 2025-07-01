@@ -80,7 +80,26 @@ export const holdSeat = asyncHandler(
     if (!showtimeId || !seatId || !userId) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const message = await roomService.holdSeat(userId, showtimeId, seatId);
+    const message = await roomService.holdSeat(
+      req.redisClient,
+      userId,
+      showtimeId,
+      seatId
+    );
     res.status(200).json(message);
+  }
+);
+
+export const getHeldSeats = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { showtimeId } = req.params;
+    if (!showtimeId) {
+      return res.status(400).json({ message: "Showtime ID is required" });
+    }
+    const heldSeats = await roomService.getHeldSeats(
+      req.redisClient,
+      showtimeId
+    );
+    res.status(200).json({ data: heldSeats });
   }
 );

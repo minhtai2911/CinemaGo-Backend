@@ -24,10 +24,7 @@ router.delete(
   authorizeRole("ADMIN"),
   RoomController.deleteRoomById
 );
-router.post(
-  "/hold-seat",
-  verifyToken,
-  RoomController.holdSeat
-);
+router.post("/hold-seat", verifyToken, RoomController.holdSeat);
+router.get("/:showtimeId/hold-seat", verifyToken, RoomController.getHeldSeats);
 
 export default router;

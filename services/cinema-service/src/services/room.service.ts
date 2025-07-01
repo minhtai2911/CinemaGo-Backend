@@ -176,12 +176,13 @@ export const deleteRoomById = async (roomId: string) => {
 };
 
 export const holdSeat = async (
+  redisClient: any,
   userId: string,
   showtimeId: string,
   seatId: string
 ) => {
   const key = `hold:${showtimeId}:${seatId}`;
-  const existingHold = await (global as any).redisClient.get(key);
+  const existingHold = await redisClient.get(key);
   // If seats are already held, throw a custom error
   if (existingHold) {
     logger.warn("Seats already held", { showtimeId, seatId });
@@ -196,7 +197,7 @@ export const holdSeat = async (
     throw new CustomError("Seat not found", 404);
   }
   // Set the hold in Redis with a 5-minute expiration
-  await (global as any).redisClient.setex(
+  await redisClient.setex(
     key,
     300,
     JSON.stringify({
@@ -215,4 +216,16 @@ export const holdSeat = async (
   return {
     message: "Seats held successfully",
   };
+};
+
+export const getHeldSeats = async (redisClient: any, showtimeId: string) => {
+  const keys = await redisClient.keys(`hold:${showtimeId}:*`);
+  const holds = await Promise.all(
+    keys.map(async (key: string) => {
+      const holdData = await redisClient.get(key);
+      return JSON.parse(holdData);
+    })
+  );
+  logger.info("Fetched held seats", { showtimeId, holds });
+  return holds;
 };
