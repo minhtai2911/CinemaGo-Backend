@@ -131,11 +131,11 @@ export const logout = async (userId: string, token: string) => {
     throw new CustomError("Refresh token is required", 400);
   }
   // Delete the refresh token
-  const result = await prisma.refreshToken.deleteMany({
+  const result = await prisma.refreshToken.delete({
     where: { userId, token },
   });
   // Check if the token was deleted
-  if (result.count === 0) {
+  if (!result) {
     logger.warn("No refresh token found to delete", { userId, token });
     throw new CustomError("Invalid refresh token", 400);
   }
