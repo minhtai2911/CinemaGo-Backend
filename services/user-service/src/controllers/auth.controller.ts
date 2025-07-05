@@ -99,11 +99,11 @@ export const sendVerificationLink = asyncHandler(
 
 export const verifyAccountByLink = asyncHandler(
   async (req: Request, res: Response) => {
-    const { email, token } = req.body;
-    if (!email || !token) {
-      return res.status(400).json({ message: "Email and token are required" });
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      return res.status(400).json({ message: "User ID and token are required" });
     }
-    const message = await AuthService.verifyAccountByLink(email, token);
+    const message = await AuthService.verifyAccountByLink(userId, token);
     res.status(200).json(message);
   }
 );

@@ -317,7 +317,7 @@ export const sendVerificationLink = async (email: string) => {
   return { message: "Verification link sent successfully" };
 };
 
-export const verifyAccountByLink = async (token: string, userId: string) => {
+export const verifyAccountByLink = async (userId: string, token: string) => {
   // Validate input
   if (!token || !userId) {
     logger.warn("Token and userId are required for account verification");
