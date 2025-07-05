@@ -66,15 +66,6 @@ export const forgotPassword = asyncHandler(
   }
 );
 
-export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ message: "Email and OTP are required" });
-  }
-  const message = await AuthService.verifyOtp(email, otp);
-  res.status(200).json(message);
-});
-
 export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, otp, newPassword } = req.body;
