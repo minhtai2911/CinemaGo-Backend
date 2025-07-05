@@ -10,8 +10,8 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { users, totalItems, totalPages } = await UserService.getUsers({
     page: pageNumber,
     limit: limitNumber,
-    search: String(search) || "",
-    role: String(role) || undefined,
+    search: search ? String(search) : "",
+    role: role ? String(role) : undefined
   });
   res.status(200).json({
     pagination: {
