@@ -10,15 +10,15 @@ export const getShowtimes = asyncHandler(
     const data = await showtimeService.getShowtimes({
       page: pageNumber,
       limit: limitNumber,
-      movieId: String(movieId) || undefined,
-      cinemaId: String(cinemaId) || undefined,
+      movieId: movieId ? String(movieId) : undefined,
+      cinemaId: cinemaId ? String(cinemaId) : undefined,
     });
     res.status(200).json({
       pagination: {
         totalItems: data.totalItems,
         totalPages: data.totalPages,
         currentPage: pageNumber,
-        pageSize: limitNumber,
+        pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
         hasNextPage: pageNumber < data.totalPages,
         hasPrevPage: pageNumber > 1,
       },
@@ -64,9 +64,9 @@ export const createShowtime = asyncHandler(
       roomId,
       new Date(startTime),
       new Date(endTime),
-      price,
+      Number(price),
       language,
-      subtitle,
+      Boolean(subtitle),
       format
     );
     res.status(201).json({ data: showtime });
@@ -76,6 +76,9 @@ export const createShowtime = asyncHandler(
 export const updateShowtimeById = asyncHandler(
   async (req: Request, res: Response) => {
     const showtimeId = req.params.id;
+    if (!showtimeId) {
+      return res.status(400).json({ message: "Showtime ID is required" });
+    }
     const {
       movieId,
       roomId,
@@ -93,9 +96,9 @@ export const updateShowtimeById = asyncHandler(
         roomId,
         startTime: startTime ? new Date(startTime) : undefined,
         endTime: endTime ? new Date(endTime) : undefined,
-        price,
+        price: Number(price),
         language,
-        subtitle,
+        subtitle: Boolean(subtitle),
         format,
       }
     );
@@ -103,10 +106,28 @@ export const updateShowtimeById = asyncHandler(
   }
 );
 
-export const deleteShowtimeById = asyncHandler(
+export const archiveShowtimeById = asyncHandler(
   async (req: Request, res: Response) => {
     const showtimeId = req.params.id;
-    const message = await showtimeService.deleteShowtimeById(showtimeId);
+    if (!showtimeId) {
+      return res.status(400).json({ message: "Showtime ID is required" });
+    }
+    const message = await showtimeService.archiveShowtimeById(
+      showtimeId
+    );
+    res.status(200).json(message);
+  }
+);
+
+export const restoreShowtimeById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const showtimeId = req.params.id;
+    if (!showtimeId) {
+      return res.status(400).json({ message: "Showtime ID is required" });
+    }
+    const message = await showtimeService.restoreShowtimeById(
+      showtimeId
+    );
     res.status(200).json(message);
   }
 );

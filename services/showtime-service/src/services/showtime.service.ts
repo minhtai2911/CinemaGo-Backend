@@ -77,7 +77,7 @@ export const createShowtime = async (
   // Check if the room exists
   let room;
   try {
-    room = await axios.get(`${process.env.ROOM_SERVICE_URL}/rooms/${roomId}`);
+    room = await axios.get(`${process.env.CINEMA_SERVICE_URL}/api/v1/rooms/${roomId}`);
   } catch (error: any) {
     if (error?.response && error?.response?.status === 404) {
       logger.warn("Room not found", { roomId });
@@ -91,7 +91,7 @@ export const createShowtime = async (
     data: {
       movieId,
       roomId,
-      cinemaId: room.data.cinemaId,
+      cinemaId: room.data.data.cinemaId,
       startTime,
       endTime,
       price,
@@ -127,7 +127,7 @@ export const updateShowtimeById = async (
     let room;
     try {
       room = await axios.get(
-        `${process.env.ROOM_SERVICE_URL}/rooms/${data.roomId}`
+        `${process.env.CINEMA_SERVICE_URL}/api/v1/rooms/${data.roomId}`
       );
     } catch (error: any) {
       if (error?.response && error?.response?.status === 404) {
@@ -169,16 +169,30 @@ export const updateShowtimeById = async (
   return showtime;
 };
 
-export const deleteShowtimeById = async (showtimeId: string) => {
-  // Delete a showtime by ID
-  const showtime = await prisma.showtime.delete({
+export const archiveShowtimeById = async (showtimeId: string) => {
+  // Archive the showtime by setting isActive to false
+  const showtime = await prisma.showtime.update({
     where: { id: showtimeId },
+    data: { isActive: false },
   });
-  // If showtime not found, throw an error
   if (!showtime) {
-    logger.warn("Showtime not found for deletion", { showtimeId });
+    logger.warn("Showtime not found for archiving", { showtimeId });
     throw new CustomError("Showtime not found", 404);
   }
-  logger.info("Deleted showtime", { showtime });
-  return { message: "Showtime deleted successfully" };
+  logger.info("Archived showtime", { showtime });
+  return { message: "Showtime archived successfully" };
+};
+
+export const restoreShowtimeById = async (showtimeId: string) => {
+  // Restore the showtime by setting isActive to true
+  const showtime = await prisma.showtime.update({
+    where: { id: showtimeId },
+    data: { isActive: true },
+  });
+  if (!showtime) {
+    logger.warn("Showtime not found for restoring", { showtimeId });
+    throw new CustomError("Showtime not found", 404);
+  }
+  logger.info("Restored showtime", { showtime });
+  return { message: "Showtime restored successfully" };
 };

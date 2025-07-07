@@ -8,6 +8,7 @@ router.get("/", ShowtimeController.getShowtimes);
 router.get("/:id", ShowtimeController.getShowtimeById);
 router.post("/", verifyToken, authorizeRole("ADMIN"), ShowtimeController.createShowtime);
 router.put("/:id", verifyToken, authorizeRole("ADMIN"), ShowtimeController.updateShowtimeById);
-router.delete("/:id", verifyToken, authorizeRole("ADMIN"), ShowtimeController.deleteShowtimeById);
+router.put("/archive/:id", verifyToken, authorizeRole("ADMIN"), ShowtimeController.archiveShowtimeById);
+router.put("/restore/:id", verifyToken, authorizeRole("ADMIN"), ShowtimeController.restoreShowtimeById);
 
 export default router;
