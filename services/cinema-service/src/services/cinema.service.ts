@@ -70,7 +70,7 @@ export const createCinema = async (
 
 export const updateCinemaById = async (
   cinemaId: string,
-  data: { name: string; address: string; city: string }
+  data: { name?: string; address?: string; city?: string }
 ) => {
   // Check if cinema exists before updating
   const cinema = await prisma.cinema.findUnique({

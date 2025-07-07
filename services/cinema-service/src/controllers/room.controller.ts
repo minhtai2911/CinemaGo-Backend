@@ -10,14 +10,14 @@ export const getRooms = asyncHandler(async (req: Request, res: Response) => {
   const data = await roomService.getRooms({
     page: pageNumber,
     limit: limitNumber,
-    search: String(search) || "",
+    search: search ? String(search) : "",
   });
   res.status(200).json({
     pagination: {
       totalItems: data.totalItems,
       totalPages: data.totalPages,
       currentPage: pageNumber,
-      pageSize: limitNumber,
+      pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
       hasNextPage: pageNumber < data.totalPages,
       hasPrevPage: pageNumber > 1,
     },
@@ -49,10 +49,10 @@ export const createRoom = asyncHandler(async (req: Request, res: Response) => {
 export const updateRoomById = asyncHandler(
   async (req: Request, res: Response) => {
     const roomId = req.params.id;
-    const { name, cinemaId, seatLayout, vipPrice, couplePrice } = req.body;
-    if (!name || !cinemaId || !seatLayout || !vipPrice || !couplePrice) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!roomId) {
+      return res.status(400).json({ message: "Room ID is required" });
     }
+    const { name, cinemaId, seatLayout, vipPrice, couplePrice } = req.body;
     const room = await roomService.updateRoomById(
       roomId,
       name,
@@ -65,11 +65,25 @@ export const updateRoomById = asyncHandler(
   }
 );
 
-export const deleteRoomById = asyncHandler(
+export const archiveRoomById = asyncHandler(
   async (req: Request, res: Response) => {
     const roomId = req.params.id;
-    await roomService.deleteRoomById(roomId);
-    res.status(204).send();
+    if (!roomId) {
+      return res.status(400).json({ message: "Room ID is required" });
+    }
+    const message = await roomService.archiveRoomById(roomId);
+    res.status(200).json(message);
+  }
+);
+
+export const restoreRoomById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const roomId = req.params.id;
+    if (!roomId) {
+      return res.status(400).json({ message: "Room ID is required" });
+    }
+    const message = await roomService.restoreRoomById(roomId);
+    res.status(200).json(message);
   }
 );
 

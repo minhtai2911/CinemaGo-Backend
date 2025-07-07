@@ -34,6 +34,7 @@ model Room {
   cinema     Cinema   @relation(fields: [cinemaId], references: [id])
   totalSeats Int
   seatLayout Json
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   Seat       Seat[]

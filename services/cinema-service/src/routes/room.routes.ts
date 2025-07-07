@@ -18,11 +18,17 @@ router.put(
   authorizeRole("ADMIN"),
   RoomController.updateRoomById
 );
-router.delete(
-  "/:id",
+router.put(
+  "/archive/:id",
   verifyToken,
   authorizeRole("ADMIN"),
-  RoomController.deleteRoomById
+  RoomController.archiveRoomById
+);
+router.put(
+  "/restore/:id",
+  verifyToken,
+  authorizeRole("ADMIN"),
+  RoomController.restoreRoomById
 );
 router.post("/hold-seat", verifyToken, RoomController.holdSeat);
 router.get("/:showtimeId/hold-seat", verifyToken, RoomController.getHeldSeats);

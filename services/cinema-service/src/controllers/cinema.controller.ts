@@ -9,14 +9,14 @@ export const getCinemas = asyncHandler(async (req: Request, res: Response) => {
   const data = await cinemaService.getCinemas({
     page: pageNumber,
     limit: limitNumber,
-    search: String(search) || "",
+    search: search ? String(search) : "",
   });
   res.status(200).json({
     pagination: {
       totalItems: data.totalItems,
       totalPages: data.totalPages,
       currentPage: pageNumber,
-      pageSize: limitNumber,
+      pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
       hasNextPage: pageNumber < data.totalPages,
       hasPrevPage: pageNumber > 1,
     },
@@ -47,9 +47,6 @@ export const updateCinemaById = asyncHandler(
   async (req: Request, res: Response) => {
     const cinemaId = req.params.id;
     const { name, address, city } = req.body;
-    if (!name || !address || !city) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
     const cinema = await cinemaService.updateCinemaById(cinemaId, {
       name,
       address,

@@ -112,17 +112,19 @@ export const createRoom = async (
 
 export const updateRoomById = async (
   roomId: string,
-  name: string,
-  cinemaId: string,
-  seatLayout: Seat[],
-  vipPrice: number,
-  couplePrice: number
+  name?: string,
+  cinemaId?: string,
+  seatLayout?: Seat[],
+  vipPrice?: number,
+  couplePrice?: number
 ) => {
   // Calculate total seats from the seat layout
   let totalSeats = 0;
-  for (const seat of seatLayout) {
-    if (seat.type !== "EMPTY") {
-      totalSeats++;
+  if (seatLayout && seatLayout.length > 0) {
+    for (const seat of seatLayout) {
+      if (seat.type !== "EMPTY") {
+        totalSeats++;
+      }
     }
   }
   // Update a room by its ID
@@ -136,43 +138,61 @@ export const updateRoomById = async (
     throw new CustomError("Room not found", 404);
   }
   // Update seat entries in the database
-  const seatEntries = seatLayout
-    .filter((seat) => seat.type !== "EMPTY")
-    .map((seat) => {
-      return {
-        roomId: updatedRoom.id,
-        seatNumber: `${seat.row}${seat.col}`,
-        seatType: seat.type,
-        extraPrice:
-          seat.type === "VIP"
-            ? vipPrice
-            : seat.type === "COUPLE"
-            ? couplePrice
-            : 0,
-      };
+  if (seatLayout && seatLayout.length > 0) {
+    const seatEntries = seatLayout
+      .filter((seat) => seat.type !== "EMPTY")
+      .map((seat) => {
+        return {
+          roomId: updatedRoom.id,
+          seatNumber: `${seat.row}${seat.col}`,
+          seatType: seat.type,
+          extraPrice:
+            seat.type === "VIP"
+              ? vipPrice
+              : seat.type === "COUPLE"
+              ? couplePrice
+              : 0,
+        };
+      });
+    await prisma.seat.deleteMany({
+      where: { roomId: updatedRoom.id },
     });
-  await prisma.seat.deleteMany({
-    where: { roomId: updatedRoom.id },
-  });
-  await prisma.seat.createMany({
-    data: seatEntries,
-  });
+    await prisma.seat.createMany({
+      data: seatEntries,
+    });
+  }
   logger.info("Updated room", { updatedRoom });
   return updatedRoom;
 };
 
-export const deleteRoomById = async (roomId: string) => {
-  // Delete a room by its ID
-  const deletedRoom = await prisma.room.delete({
+export const archiveRoomById = async (roomId: string) => {
+  // Archive a room by its ID
+  const archivedRoom = await prisma.room.update({
     where: { id: roomId },
+    data: { isActive: false },
   });
   // If room not found, throw a custom error
-  if (!deletedRoom) {
-    logger.warn("Room not found for deletion", { roomId });
+  if (!archivedRoom) {
+    logger.warn("Room not found for archiving", { roomId });
     throw new CustomError("Room not found", 404);
   }
-  logger.info("Deleted room", { deletedRoom });
-  return { message: "Room deleted successfully" };
+  logger.info("Archived room", { archivedRoom });
+  return { message: "Room archived successfully" };
+};
+
+export const restoreRoomById = async (roomId: string) => {
+  // Restore a room by its ID
+  const restoredRoom = await prisma.room.update({
+    where: { id: roomId },
+    data: { isActive: true },
+  });
+  // If room not found, throw a custom error
+  if (!restoredRoom) {
+    logger.warn("Room not found for restoration", { roomId });
+    throw new CustomError("Room not found", 404);
+  }
+  logger.info("Restored room", { restoredRoom });
+  return { message: "Room restored successfully" };
 };
 
 export const holdSeat = async (
