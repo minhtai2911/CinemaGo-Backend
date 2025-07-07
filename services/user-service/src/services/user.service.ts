@@ -172,7 +172,9 @@ export const updateProfile = async (
   // Handle avatar upload if provided
   if (avatarUrl) {
     // If user has an existing avatar, delete it from Cloudinary
-    await deleteImageFromCloudinary(user.publicId);
+    if (user.publicId) {
+      await deleteImageFromCloudinary(user.publicId);
+    }
     // Upload new avatar to Cloudinary
     uploadResult = await uploadImageToCloudinary(avatarUrl);
     avatarUrl = uploadResult.secure_url;

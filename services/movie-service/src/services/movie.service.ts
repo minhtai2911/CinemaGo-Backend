@@ -76,7 +76,7 @@ export const createMovie = async (
   duration: number,
   releaseDate: Date,
   genres: string[],
-  thumbnailUrl: string,
+  thumbnail: string,
   trailerUrl: string
 ) => {
   // Check if movie already exists
@@ -89,37 +89,52 @@ export const createMovie = async (
     throw new CustomError("Movie already exists", 409);
   }
 
-  const thumbnailUpload = await uploadImageToCloudinary(thumbnailUrl);
-  const trailerUpload = await uploadVideoToCloudinary(trailerUrl);
+  const [thumbnailUpload, trailerUpload] = await Promise.all([
+    uploadImageToCloudinary(thumbnail),
+    uploadVideoToCloudinary(trailerUrl),
+  ]);
 
   // Check if uploads were successful
   if (!thumbnailUpload || !trailerUpload) {
     logger.error("Failed to upload media to Cloudinary", {
-      thumbnailUrl,
+      thumbnail,
       trailerUrl,
     });
     throw new CustomError("Failed to upload media", 500);
   }
 
   // Create movie with uploaded media and genres
-  const movie = await prisma.movie.create({
-    data: {
-      title,
-      description,
-      duration,
-      releaseDate,
-      thumbnail: thumbnailUpload.secure_url,
-      thumbnailPublicId: thumbnailUpload.public_id,
-      trailerUrl: trailerUpload.secure_url,
-      trailerPublicId: trailerUpload.public_id,
-      genres: {
-        connect: genres.map((id) => ({ id })),
+  try {
+    const movie = await prisma.movie.create({
+      data: {
+        title,
+        description,
+        duration,
+        releaseDate,
+        thumbnail: thumbnailUpload.secure_url,
+        thumbnailPublicId: thumbnailUpload.public_id,
+        trailerUrl: trailerUpload.secure_url,
+        trailerPublicId: trailerUpload.public_id,
+        genres: {
+          connect: genres.map((id) => ({ id })),
+        },
       },
-    },
-  });
-
-  logger.info("Created movie", { movie });
-  return movie;
+      include: { genres: true },
+    });
+    logger.info("Created movie", { movie });
+    return movie;
+  } catch (error) {
+    logger.error("Failed to create movie", { error, title });
+    await Promise.all([
+      deleteImageFromCloudinary(thumbnailUpload.public_id).catch((err) => {
+        logger.error("Failed to delete thumbnail", { err });
+      }),
+      deleteVideoFromCloudinary(trailerUpload.public_id).catch((err) => {
+        logger.error("Failed to delete trailer", { err });
+      }),
+    ]);
+    throw new CustomError("Failed to create movie", 500);
+  }
 };
 
 export const updateMovieById = async (
@@ -129,9 +144,9 @@ export const updateMovieById = async (
     description: string;
     duration: number;
     releaseDate: Date;
-    genres?: string[];
-    thumbnail?: string;
-    trailerUrl?: string;
+    genres: string[];
+    thumbnail: string;
+    trailerUrl: string;
   }
 ) => {
   // Check if movie exists
@@ -142,71 +157,78 @@ export const updateMovieById = async (
     logger.warn("Movie not found for update", { movieId });
     throw new CustomError("Movie not found", 404);
   }
-  // Check if any fields are provided for update
+  // Prepare data for update
   const updateData: any = {
     title: data.title,
     description: data.description,
     duration: data.duration,
     releaseDate: data.releaseDate,
   };
+  // If thumbnail is provided, upload it
+  let thumbnailUpload;
   if (data.thumbnail) {
-    // Handle thumbnail upload and deletion
-    const existingThumbnail = movie.thumbnail;
-    if (existingThumbnail) {
-      const deleteResult = await deleteImageFromCloudinary(existingThumbnail);
-      if (!deleteResult) {
-        logger.error("Failed to delete existing thumbnail from Cloudinary", {
-          thumbnail: existingThumbnail,
-        });
-        throw new CustomError("Failed to delete existing thumbnail", 500);
-      }
-    }
-    const thumbnailUpload = await uploadImageToCloudinary(data.thumbnail);
-    if (!thumbnailUpload) {
-      logger.error("Failed to upload thumbnail to Cloudinary", {
-        thumbnail: data.thumbnail,
-      });
+    await deleteImageFromCloudinary(movie.thumbnailPublicId).catch((err) => {
+      logger.error("Failed to delete old thumbnail", { err });
+    });
+    thumbnailUpload = await uploadImageToCloudinary(data.thumbnail);
+    if (thumbnailUpload) {
+      updateData.thumbnail = thumbnailUpload.secure_url;
+      updateData.thumbnailPublicId = thumbnailUpload.public_id;
+    } else {
+      logger.error("Failed to upload thumbnail", { data });
       throw new CustomError("Failed to upload thumbnail", 500);
     }
-    updateData.thumbnail = thumbnailUpload.secure_url;
-    updateData.thumbnailPublicId = thumbnailUpload.public_id;
   }
+  // If trailer URL is provided, upload it
+  let trailerUpload;
   if (data.trailerUrl) {
-    // Handle trailer upload and deletion
-    const existingTrailer = movie.trailerUrl;
-    if (existingTrailer) {
-      const deleteResult = await deleteVideoFromCloudinary(existingTrailer);
-      if (!deleteResult) {
-        logger.error("Failed to delete existing trailer from Cloudinary", {
-          trailer: existingTrailer,
-        });
-        throw new CustomError("Failed to delete existing trailer", 500);
-      }
-    }
-    const trailerUpload = await uploadVideoToCloudinary(data.trailerUrl);
-    if (!trailerUpload) {
-      logger.error("Failed to upload trailer to Cloudinary", {
-        trailer: data.trailerUrl,
-      });
+    await deleteVideoFromCloudinary(movie.trailerPublicId).catch((err) => {
+      logger.error("Failed to delete old trailer", { err });
+    });
+    trailerUpload = await uploadVideoToCloudinary(data.trailerUrl);
+    if (trailerUpload) {
+      updateData.trailerUrl = trailerUpload.secure_url;
+      updateData.trailerPublicId = trailerUpload.public_id;
+    } else {
+      logger.error("Failed to upload trailer", { data });
       throw new CustomError("Failed to upload trailer", 500);
     }
-    updateData.trailerUrl = trailerUpload.secure_url;
-    updateData.trailerPublicId = trailerUpload.public_id;
   }
-  // Update genres if provided
+  // If genres are provided, update them
   if (data.genres && data.genres.length > 0) {
     updateData.genres = {
       set: data.genres.map((id) => ({ id })),
     };
   }
   // Handle genres update
-  const updatedMovie = await prisma.movie.update({
-    where: { id: movieId },
-    data: updateData,
-  });
+  try {
+    const updatedMovie = await prisma.movie.update({
+      where: { id: movieId },
+      data: updateData,
+      include: { genres: true },
+    });
 
-  logger.info("Updated movie", { updatedMovie });
-  return updatedMovie;
+    logger.info("Updated movie", { updatedMovie });
+    return updatedMovie;
+  } catch (error) {
+    logger.error("Error updating movie", { error });
+    // If update fails, clean up any uploaded media
+    if (data.thumbnail) {
+      await deleteImageFromCloudinary(updateData.thumbnailPublicId).catch(
+        (err) => {
+          logger.error("Failed to delete thumbnail", { err });
+        }
+      );
+    }
+    if (data.trailerUrl) {
+      await deleteVideoFromCloudinary(updateData.trailerPublicId).catch(
+        (err) => {
+          logger.error("Failed to delete trailer", { err });
+        }
+      );
+    }
+    throw new CustomError("Failed to update movie", 500);
+  }
 };
 
 export const archiveMovieById = async (movieId: string) => {
