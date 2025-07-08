@@ -127,7 +127,7 @@ export const updateShowtimeById = async (
     let room;
     try {
       room = await axios.get(
-        `${process.env.CINEMA_SERVICE_URL}/api/v1/rooms/${data.roomId}`
+        `${process.env.CINEMA_SERVICE_URL}/${data.roomId}`
       );
     } catch (error: any) {
       if (error?.response && error?.response?.status === 404) {

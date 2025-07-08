@@ -34,7 +34,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
-  "/api/v1/booking",
+  "/api/v1/bookings",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     req.redisClient = redisClient;
     next();

@@ -1,6 +1,7 @@
 import logger from "../utils/logger.js";
 import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
+import axios from "axios";
 
 export const getBookingsByUserId = async ({
   userId,
@@ -65,13 +66,17 @@ export const createBooking = async (
   showtimeId: string,
   seatIds: string[]
 ) => {
+  let totalPrice: number = 0;
   for (const seatId of seatIds) {
     const key = `hold:${showtimeId}:${seatId}`;
-    const holder = await redisClient.get(key);
-    if (!holder) {
-      logger.warn("Time out", { showtimeId, seatId });
-      throw new CustomError("Time out", 400);
+    const rawHolder = await redisClient.get(key);
+    // Check if the seat is held in Redis
+    if (!rawHolder) {
+      logger.warn("Seat is not held or time out", { showtimeId, seatId });
+      throw new CustomError("Seat is not held or time out", 400);
     }
+    // Parse the holder information from Redis
+    const holder = JSON.parse(rawHolder);
     if (holder.userId !== userId) {
       logger.warn("Seat is already held by another user", {
         showtimeId,
@@ -81,6 +86,16 @@ export const createBooking = async (
       });
       throw new CustomError("Seat is already held by another user", 400);
     }
+    const showtime = await axios.get(
+      `${process.env.SHOWTIME_SERVICE_URL}/${showtimeId}`
+    );
+    // Check if the showtime exists
+    if (!showtime || !showtime.data || !showtime.data.data) {
+      logger.warn("Showtime not found", { showtimeId });
+      throw new CustomError("Showtime not found", 404);
+    }
+    // Calculate the total price for the booking
+    totalPrice += holder.extraPrice + showtime.data.data.price;
   }
   // Transaction to create a booking and delete held seats from Redis
   const result = await prisma.$transaction(async (tx: any) => {
@@ -89,6 +104,7 @@ export const createBooking = async (
       data: {
         userId,
         showtimeId,
+        totalPrice,
         BookingSeat: {
           create: seatIds.map((seatId) => ({
             seatId,

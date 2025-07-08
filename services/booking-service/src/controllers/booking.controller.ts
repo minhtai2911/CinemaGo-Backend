@@ -22,7 +22,7 @@ export const getBookingsByUserId = asyncHandler(
         totalItems: data.totalItems,
         totalPages: data.totalPages,
         currentPage: pageNumber,
-        pageSize: limitNumber,
+        pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
         hasNextPage: pageNumber < data.totalPages,
         hasPrevPage: pageNumber > 1,
       },
