@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  userId      String
+  showtimeId  String
+  totalPrice  Int
+  BookingSeat BookingSeat[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId], name: "idx_booking_user_id")
+  @@index([showtimeId], name: "idx_booking_showtime_id")
+  @@map("bookings")
+}
+
+model BookingSeat {
+  id         String   @id @default(uuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  seatId     String
+  showtimeId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([seatId, showtimeId], name: "uniq_booking_seat_seat_id_showtime_id")
+  @@index([bookingId], name: "idx_booking_seat_booking_id")
+  @@index([seatId], name: "idx_booking_seat_seat_id")
+  @@map("booking_seats")
+}

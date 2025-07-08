@@ -21,8 +21,8 @@ model User {
   fullname          String
   gender            String
   role              Role                @default(USER)
-  avatarUrl         String              @default("https://res.cloudinary.com/dffy6tds8/image/upload/v1744127926/avatar_kn6ynb.jpg")
-  publicId          String              @default("avatar_kn6ynb")
+  avatarUrl         String              @default("")
+  publicId          String              @default("")
   isActive          Boolean             @default(false)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt

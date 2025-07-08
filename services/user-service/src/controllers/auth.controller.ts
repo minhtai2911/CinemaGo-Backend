@@ -66,15 +66,6 @@ export const forgotPassword = asyncHandler(
   }
 );
 
-export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) {
-    return res.status(400).json({ message: "Email and OTP are required" });
-  }
-  const message = await AuthService.verifyOtp(email, otp);
-  res.status(200).json(message);
-});
-
 export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, otp, newPassword } = req.body;
@@ -99,11 +90,11 @@ export const sendVerificationLink = asyncHandler(
 
 export const verifyAccountByLink = asyncHandler(
   async (req: Request, res: Response) => {
-    const { email, token } = req.body;
-    if (!email || !token) {
-      return res.status(400).json({ message: "Email and token are required" });
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      return res.status(400).json({ message: "User ID and token are required" });
     }
-    const message = await AuthService.verifyAccountByLink(email, token);
+    const message = await AuthService.verifyAccountByLink(userId, token);
     res.status(200).json(message);
   }
 );

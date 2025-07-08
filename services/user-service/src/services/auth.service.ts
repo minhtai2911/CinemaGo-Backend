@@ -131,9 +131,14 @@ export const logout = async (userId: string, token: string) => {
     throw new CustomError("Refresh token is required", 400);
   }
   // Delete the refresh token
-  await prisma.refreshToken.deleteMany({
+  const result = await prisma.refreshToken.deleteMany({
     where: { userId, token },
   });
+  // Check if the token was deleted
+  if (result.count === 0) {
+    logger.warn("No refresh token found to delete", { userId, token });
+    throw new CustomError("Invalid refresh token", 400);
+  }
   logger.info("User logged out successfully", { userId });
   return { message: "Logged out successfully" };
 };
@@ -312,7 +317,7 @@ export const sendVerificationLink = async (email: string) => {
   return { message: "Verification link sent successfully" };
 };
 
-export const verifyAccountByLink = async (token: string, userId: string) => {
+export const verifyAccountByLink = async (userId: string, token: string) => {
   // Validate input
   if (!token || !userId) {
     logger.warn("Token and userId are required for account verification");

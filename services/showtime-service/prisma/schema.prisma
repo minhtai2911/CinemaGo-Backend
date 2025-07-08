@@ -25,6 +25,7 @@ model Showtime {
   language  String   @default("vi")
   subtitle  Boolean  @default(true)
   format    String   @default("2D")
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

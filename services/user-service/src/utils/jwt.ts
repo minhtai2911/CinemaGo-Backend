@@ -8,6 +8,7 @@ export const generateTokens = async (
   avatarUrl: string,
   publicId: string
 ) => {
+  // Create access and refresh tokens
   const accessToken = jwt.sign(
     {
       userId: userId,
@@ -29,11 +30,15 @@ export const generateTokens = async (
     process.env.REFRESH_TOKEN_SECRET || "defaultRefreshTokenSecret",
     { expiresIn: "7d" }
   );
-
+  // Check if tokens were generated successfully
   if (!accessToken || !refreshToken) {
     throw new Error("Failed to generate tokens");
   }
-
+  // Delete any existing refresh token for the user
+  await prisma.refreshToken.deleteMany({
+    where: { userId },
+  });
+  // Store the refresh token in the database
   await prisma.refreshToken.create({
     data: {
       userId,
