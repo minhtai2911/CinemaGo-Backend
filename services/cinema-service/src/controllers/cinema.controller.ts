@@ -34,11 +34,17 @@ export const getCinemaById = asyncHandler(
 
 export const createCinema = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, address, city } = req.body;
+    const { name, address, city, longitude, latitude } = req.body;
     if (!name || !address || !city) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const cinema = await cinemaService.createCinema(name, address, city);
+    const cinema = await cinemaService.createCinema(
+      name,
+      address,
+      city,
+      longitude,
+      latitude
+    );
     res.status(201).json({ data: cinema });
   }
 );
@@ -46,11 +52,13 @@ export const createCinema = asyncHandler(
 export const updateCinemaById = asyncHandler(
   async (req: Request, res: Response) => {
     const cinemaId = req.params.id;
-    const { name, address, city } = req.body;
+    const { name, address, city, longitude, latitude } = req.body;
     const cinema = await cinemaService.updateCinemaById(cinemaId, {
       name,
       address,
       city,
+      longitude,
+      latitude,
     });
     res.status(200).json({ data: cinema });
   }

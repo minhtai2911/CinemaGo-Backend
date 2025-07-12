@@ -20,6 +20,8 @@ model Cinema {
   address   String
   city      String
   isActive  Boolean  @default(true)
+  longitude Float?
+  latitude  Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Room      Room[]

@@ -50,7 +50,9 @@ export const getCinemaById = async (cinemaId: string) => {
 export const createCinema = async (
   name: string,
   address: string,
-  city: string
+  city: string,
+  longitude?: number,
+  latitude?: number
 ) => {
   // Check if cinema already exists
   const existingCinema = await prisma.cinema.findUnique({
@@ -62,7 +64,7 @@ export const createCinema = async (
   }
   // Create a new cinema
   const cinema = await prisma.cinema.create({
-    data: { name, address, city },
+    data: { name, address, city, longitude, latitude },
   });
   logger.info("Created cinema", { cinema });
   return cinema;
@@ -70,7 +72,13 @@ export const createCinema = async (
 
 export const updateCinemaById = async (
   cinemaId: string,
-  data: { name?: string; address?: string; city?: string }
+  data: {
+    name?: string;
+    address?: string;
+    city?: string;
+    longitude?: number;
+    latitude?: number;
+  }
 ) => {
   // Check if cinema exists before updating
   const cinema = await prisma.cinema.findUnique({
