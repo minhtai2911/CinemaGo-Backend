@@ -167,7 +167,7 @@ export const reviewResolver = {
       }
       // Check if review exists
       const review = await Review.findById(reviewId);
-      if (!review) throw new Error("Review not found");
+      if (!review) throw new CustomError("Review not found", 404);
       // Validate content
       if (!content) {
         throw new CustomError("Content must be provided", 400);
@@ -207,7 +207,7 @@ export const reviewResolver = {
       }
       // Find review by ID and check ownership
       const review = await Review.findById(reviewId);
-      if (!review) throw new Error("Review not found");
+      if (!review) throw new CustomError("Review not found", 404);
       if (review.userId !== context.user.userId) {
         throw new CustomError("You can only update your own reviews", 403);
       }
@@ -254,7 +254,7 @@ export const reviewResolver = {
       // Find review by ID
       const review = await Review.findById(reviewId);
       // Check if review exists
-      if (!review) throw new Error("Review not found");
+      if (!review) throw new CustomError("Review not found", 404);
       // Hide the review
       review.isActive = false;
       return await review.save();
@@ -276,7 +276,7 @@ export const reviewResolver = {
       // Find review by ID
       const review = await Review.findById(reviewId);
       // Check if review exists
-      if (!review) throw new Error("Review not found");
+      if (!review) throw new CustomError("Review not found", 404);
       // Unhide the review
       review.isActive = true;
       return await review.save();
