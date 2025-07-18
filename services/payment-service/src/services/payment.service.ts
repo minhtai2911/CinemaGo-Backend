@@ -76,16 +76,7 @@ export const createPayment = async ({
       method,
     },
   });
-  // If payment creation fails, throw a custom error
-  if (!payment) {
-    logger.error("Failed to create payment", {
-      userId,
-      amount,
-      bookingId,
-      method,
-    });
-    throw new CustomError("Failed to create payment", 500);
-  }
+
   logger.info("Created payment", { payment });
   return payment;
 };
@@ -136,7 +127,7 @@ export const checkoutWithMoMo = async ({
     requestType;
 
   // Generate the signature using HMAC SHA256
-  let signature = CryptoJS.HmacSHA256(rawSignature, secretKey).toString();
+  const signature = CryptoJS.HmacSHA256(rawSignature, secretKey).toString();
 
   // Prepare the request body for MoMo API
   const requestBody = JSON.stringify({
@@ -176,7 +167,7 @@ export const checkoutWithMoMo = async ({
   return response.data.payUrl;
 };
 
-export const callbackMoMo = async (resultCode: Number, paymentId: string) => {
+export const callbackMoMo = async (resultCode: number, paymentId: string) => {
   // Handle the callback from MoMo after payment
   if (resultCode !== 0) {
     logger.error("MoMo payment failed", { resultCode, paymentId });
@@ -540,7 +531,7 @@ export const checkStatusTransactionZaloPay = async (app_trans_id: string) => {
   const paymentId = app_trans_id
     .split("_")[1]
     .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
-    console.log("Payment ID:", paymentId);
+
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
   });

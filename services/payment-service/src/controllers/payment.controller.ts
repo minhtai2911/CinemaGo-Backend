@@ -105,7 +105,6 @@ export const checkoutWithVnPay = asyncHandler(
     const { amount, bookingId } = req.body;
     const method = "VNPAY";
     const ipAddr = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    console.log("IP Address:", ipAddr);
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
