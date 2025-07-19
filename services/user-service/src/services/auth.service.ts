@@ -2,9 +2,9 @@ import prisma from "../config/db.js";
 import bcrypt from "bcrypt";
 import { generateTokens } from "../utils/jwt.js";
 import logger from "../utils/logger.js";
-import { sendMail } from "../utils/sendMail.js";
 import { randomBytes } from "crypto";
 import { CustomError } from "../utils/customError.js";
+import { publishToQueue } from "../utils/rabbitmq.js";
 
 export const signup = async (
   email: string,
@@ -189,11 +189,12 @@ export const forgotPassword = async (email: string) => {
   </div>
 `;
   const htmlContent = html.replace("{{OTP}}", otp);
-  await sendMail(
-    user.email,
-    "Yêu cầu đặt lại mật khẩu từ CinemaGo",
-    htmlContent
-  );
+  await publishToQueue("email.send", {
+    from: `"CinemaGo" <${process.env.SMTP_USER}>`,
+    to: user.email,
+    subject: "Yêu cầu đặt lại mật khẩu từ CinemaGo",
+    html: htmlContent,
+  });
   logger.info("OTP sent successfully", { email, otp });
   return { message: "OTP sent successfully" };
 };
@@ -312,7 +313,12 @@ export const sendVerificationLink = async (email: string) => {
         <p style="font-size: 12px; color: #999;">Bạn nhận được email này vì đã đăng ký tài khoản trên hệ thống CinemaGo.</p>
     </div>
     `;
-  await sendMail(user.email, "Xác minh tài khoản từ CinemaGo", html);
+  await publishToQueue("email.send", {
+    from: `"CinemaGo" <${process.env.SMTP_USER}>`,
+    to: user.email,
+    subject: "Xác minh tài khoản từ CinemaGo",
+    html: html,
+  });
   logger.info("Verification link sent successfully", { email });
   return { message: "Verification link sent successfully" };
 };
@@ -349,6 +355,7 @@ export const verifyAccountByLink = async (userId: string, token: string) => {
   await prisma.verificationToken.deleteMany({
     where: { userId },
   });
+
   logger.info("Account verified successfully", { userId });
   return { message: "Account verified successfully" };
 };

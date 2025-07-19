@@ -177,7 +177,7 @@ export const updateProfile = async (
     }
     // Upload new avatar to Cloudinary
     uploadResult = await uploadImageToCloudinary(avatarUrl);
-    avatarUrl = uploadResult.secure_url;
+    avatarUrl = uploadResult?.secure_url;
   } else {
     avatarUrl = user.avatarUrl; // Keep existing avatar if not updated
   }
