@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as AuthService from "../services/auth.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
+import { userSocketMap } from "../server.js";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -92,9 +93,17 @@ export const verifyAccountByLink = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, token } = req.body;
     if (!userId || !token) {
-      return res.status(400).json({ message: "User ID and token are required" });
+      return res
+        .status(400)
+        .json({ message: "User ID and token are required" });
     }
     const message = await AuthService.verifyAccountByLink(userId, token);
+    if (userSocketMap.has(userId)) {
+      const socketId = userSocketMap.get(userId);
+      if (socketId) {
+        req.io?.to(socketId).emit("account-verified", { userId });
+      }
+    }
     res.status(200).json(message);
   }
 );
