@@ -38,7 +38,7 @@ const server = new ApolloServer({
 await server.start();
 
 app.use(
-  "/graphql",
+  "/api/reviews",
   expressMiddleware(server, {
     context: async ({ req }) => {
       return buildContext({ req });
@@ -49,5 +49,5 @@ app.use(
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  logger.info(`Server ready at http://localhost:${PORT}/graphql`);
+  logger.info(`Server ready at http://localhost:${PORT}/api/reviews`);
 });

@@ -23,7 +23,7 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.use(errorHandler);
 

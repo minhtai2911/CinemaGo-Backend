@@ -24,7 +24,7 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1/showtimes", showtimeRoutes);
+app.use("/api/showtimes", showtimeRoutes);
 
 app.use(errorHandler);
 

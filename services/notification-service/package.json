@@ -24,7 +24,6 @@
     "@types/amqplib": "^0.10.7",
     "@types/body-parser": "^1.19.5",
     "@types/cors": "^2.8.18",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",
     "amqplib": "^0.10.8",
     "body-parser": "^2.2.0",
@@ -32,7 +31,6 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.5",
     "winston": "^3.17.0"
   }

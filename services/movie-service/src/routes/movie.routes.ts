@@ -1,35 +1,35 @@
 import express from "express";
 import * as MovieController from "../controllers/movie.controller.js";
-import { verifyToken, authorizeRole } from "../middlewares/authMiddleware.js";
+import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
-router.get("/", MovieController.getMovies);
-router.get("/:movieId", MovieController.getMovieById);
+router.get("/public", MovieController.getMovies);
+router.get("/public/:movieId", MovieController.getMovieById);
 router.post(
   "/",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   upload.fields([{ name: "thumbnail" }, { name: "trailer" }]),
   MovieController.createMovie
 );
 router.put(
   "/:movieId",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   upload.fields([{ name: "thumbnail" }, { name: "trailer" }]),
   MovieController.updateMovieById
 );
 router.put(
   "/archive/:movieId",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   MovieController.archiveMovieById
 );
 router.put(
   "/restore/:movieId",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   MovieController.restoreMovieById
 );

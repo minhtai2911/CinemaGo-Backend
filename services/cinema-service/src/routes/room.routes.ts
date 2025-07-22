@@ -1,36 +1,43 @@
 import express from "express";
 import * as RoomController from "../controllers/room.controller.js";
-import { verifyToken, authorizeRole } from "../middlewares/authMiddleware.js";
+import {
+  authenticateRequest,
+  authorizeRole,
+} from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", RoomController.getRooms);
-router.get("/:id", RoomController.getRoomById);
+router.get("/public", RoomController.getRooms);
+router.get("/public/:id", RoomController.getRoomById);
 router.post(
   "/",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   RoomController.createRoom
 );
 router.put(
   "/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   RoomController.updateRoomById
 );
 router.put(
   "/archive/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   RoomController.archiveRoomById
 );
 router.put(
   "/restore/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   RoomController.restoreRoomById
 );
-router.post("/hold-seat", verifyToken, RoomController.holdSeat);
-router.get("/:showtimeId/hold-seat", verifyToken, RoomController.getHeldSeats);
+router.post("/hold-seat", authenticateRequest, RoomController.holdSeat);
+router.get(
+  "/:showtimeId/hold-seat",
+  authenticateRequest,
+  RoomController.getHeldSeats
+);
 
 export default router;

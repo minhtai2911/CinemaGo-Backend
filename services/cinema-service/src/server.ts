@@ -34,9 +34,9 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1/cinemas", cinemaRoutes);
+app.use("/api/cinemas", cinemaRoutes);
 app.use(
-  "/api/v1/rooms",
+  "/api/rooms",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     req.redisClient = redisClient;
     next();
