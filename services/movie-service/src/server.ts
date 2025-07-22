@@ -25,8 +25,8 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1/movies", movieRoutes);
-app.use("/api/v1/genres", genresRoutes);
+app.use("/api/movies", movieRoutes);
+app.use("/api/genres", genresRoutes);
 
 app.use(errorHandler);
 

@@ -1,44 +1,31 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-
-const ACCESS_TOKEN_SECRET =
-  process.env.ACCESS_TOKEN_SECRET || "your_default_secret";
+import logger from "../utils/logger.js";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
     role: string;
-    avatarUrl: string;
-    publicId: string;
   };
 }
 
-export const verifyToken = (
+export const authenticateRequest = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
+  const userId = req.headers["x-user-id"] as string;
+  const role = req.headers["x-user-role"] as string;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Access token missing or malformed" });
+  if (!userId || !role) {
+    logger.warn(`Access attempted without user ID`);
+    res.status(401).json({
+      message: "Authentication required! Please login to continue",
+    });
     return;
   }
 
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    req.user = {
-      userId: (decoded as any).userId,
-      role: (decoded as any).role,
-      avatarUrl: (decoded as any).avatarUrl,
-      publicId: (decoded as any).publicId,
-    };
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Invalid or expired token" });
-  }
+  req.user = { userId, role };
+  next();
 };
 
 export const authorizeRole = (...allowedRoles: string[]) => {

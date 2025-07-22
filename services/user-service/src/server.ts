@@ -39,8 +39,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 io.on("connection", (socket) => {
   socket.on("verify-user", (userId) => {

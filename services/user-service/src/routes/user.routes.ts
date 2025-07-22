@@ -1,40 +1,40 @@
 import express from "express";
 import * as UserController from "../controllers/user.controller.js";
-import { verifyToken, authorizeRole } from "../middlewares/authMiddleware.js";
+import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
-router.get("/profile", verifyToken, UserController.getProfile);
-router.put("/profile", verifyToken, upload.single("avatar"), UserController.updateProfile);
-router.get("/", verifyToken, authorizeRole("ADMIN"), UserController.getUsers);
+router.get("/profile", authenticateRequest, UserController.getProfile);
+router.put("/profile", authenticateRequest, upload.single("avatar"), UserController.updateProfile);
+router.get("/", authenticateRequest, authorizeRole("ADMIN"), UserController.getUsers);
 router.get(
   "/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   UserController.getUserById
 );
 router.post(
   "/",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   UserController.createUser
 );
 router.put(
   "/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   UserController.updateUserById
 );
 router.put(
   "/:id/archive",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   UserController.archiveUserById
 );
 router.put(
   "/:id/restore",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   UserController.restoreUserById
 );

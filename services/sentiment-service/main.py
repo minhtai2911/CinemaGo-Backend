@@ -12,7 +12,7 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name)
 class TextRequest(BaseModel):
     text: str
 
-@app.post("/api/v1/predict-sentiment")
+@app.post("/api/predict-sentiment")
 def predict_sentiment(request: TextRequest):
     inputs = tokenizer(request.text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():

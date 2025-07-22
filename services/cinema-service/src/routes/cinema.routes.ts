@@ -1,32 +1,32 @@
 import express from "express";
 import * as cinemaController from "../controllers/cinema.controller.js";
-import { verifyToken, authorizeRole } from "../middlewares/authMiddleware.js";
+import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", cinemaController.getCinemas);
-router.get("/:id", cinemaController.getCinemaById);
+router.get("/public", cinemaController.getCinemas);
+router.get("/public/:id", cinemaController.getCinemaById);
 router.post(
   "/",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   cinemaController.createCinema
 );
 router.put(
   "/:id",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   cinemaController.updateCinemaById
 );
 router.put(
   "/:id/archive",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   cinemaController.archiveCinemaById
 );
 router.put(
   "/:id/restore",
-  verifyToken,
+  authenticateRequest,
   authorizeRole("ADMIN"),
   cinemaController.restoreCinemaById
 );
