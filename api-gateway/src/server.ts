@@ -15,6 +15,23 @@ import {
 } from "./middlewares/authMiddleware.js";
 import { OutgoingHttpHeaders } from "http";
 
+function sanitizeRequestBody(body: Record<string, any>): Record<string, any> {
+  const sensitiveFields = [
+    "password",
+    "newPassword",
+    "oldPassword",
+    "token",
+    "accessToken",
+    "refreshToken",
+  ];
+  return Object.keys(body).reduce((sanitized, key) => {
+    if (!sensitiveFields.includes(key)) {
+      sanitized[key] = body[key];
+    }
+    return sanitized;
+  }, {} as Record<string, any>);
+}
+
 dotenv.config();
 
 const app = express();
@@ -54,9 +71,8 @@ app.use(ratelimitOptions);
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
-  if (req.path) {
-    logger.info(`Request body: ${JSON.stringify(req.body)}`);
-  }
+  const sanitizedBody = sanitizeRequestBody(req.body);
+  logger.info(`Request body: ${JSON.stringify(sanitizedBody)}`);
   next();
 });
 
@@ -82,7 +98,7 @@ app.use(
       proxyReqOpts.headers ||= {};
 
       const headers = proxyReqOpts.headers as OutgoingHttpHeaders;
-      console.log(`User ID: ${srcReq.user?.userId}`);
+
       if (srcReq.user?.userId) {
         headers["x-user-id"] = srcReq.user.userId;
         headers["x-user-role"] = srcReq.user.role;

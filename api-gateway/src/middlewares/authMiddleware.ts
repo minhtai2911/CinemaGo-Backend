@@ -31,7 +31,6 @@ export const verifyToken = (
     "/public",
   ];
   // Allow public routes to be accessed without authentication
-  console.log(`Request path: ${req.path}`);
   const isPublic = publicRoutes.some((path) => req.path.startsWith(path));
   if (isPublic) return next();
 

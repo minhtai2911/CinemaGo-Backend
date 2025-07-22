@@ -13,7 +13,6 @@ export const authenticateRequest = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log(req.headers);
   const userId = req.headers["x-user-id"] as string;
   const role = req.headers["x-user-role"] as string;
 
