@@ -195,7 +195,7 @@ export const forgotPassword = async (email: string) => {
     subject: "Yêu cầu đặt lại mật khẩu từ CinemaGo",
     html: htmlContent,
   });
-  logger.info("OTP sent successfully", { email, otp });
+  logger.info("OTP sent successfully", { email });
   return { message: "OTP sent successfully" };
 };
 

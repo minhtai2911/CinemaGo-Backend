@@ -87,7 +87,7 @@ export const createBooking = async (
       throw new CustomError("Seat is already held by another user", 400);
     }
     const showtime = await axios.get(
-      `${process.env.SHOWTIME_SERVICE_URL}/${showtimeId}`
+      `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/${showtimeId}`
     );
     // Check if the showtime exists
     if (!showtime || !showtime.data || !showtime.data.data) {

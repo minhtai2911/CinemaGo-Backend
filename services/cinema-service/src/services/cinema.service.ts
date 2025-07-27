@@ -37,6 +37,9 @@ export const getCinemaById = async (cinemaId: string) => {
   // Fetch a cinema by its ID
   const cinema = await prisma.cinema.findUnique({
     where: { id: cinemaId },
+    include: {
+      Room: true, 
+    },
   });
   // If cinema not found, throw a custom error
   if (!cinema) {

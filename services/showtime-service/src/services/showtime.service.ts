@@ -77,7 +77,7 @@ export const createShowtime = async (
   // Check if the room exists
   let room;
   try {
-    room = await axios.get(`${process.env.CINEMA_SERVICE_URL}/api/v1/rooms/${roomId}`);
+    room = await axios.get(`${process.env.CINEMA_SERVICE_URL}/api/rooms/public/${roomId}`);
   } catch (error: any) {
     if (error?.response && error?.response?.status === 404) {
       logger.warn("Room not found", { roomId });
@@ -127,7 +127,7 @@ export const updateShowtimeById = async (
     let room;
     try {
       room = await axios.get(
-        `${process.env.CINEMA_SERVICE_URL}/${data.roomId}`
+        `${process.env.CINEMA_SERVICE_URL}/api/rooms/public/${data.roomId}`
       );
     } catch (error: any) {
       if (error?.response && error?.response?.status === 404) {
@@ -140,7 +140,7 @@ export const updateShowtimeById = async (
       });
       throw new CustomError("Failed to fetch room", 500);
     }
-    updateShowtime.cinemaId = room.data.cinemaId;
+    updateShowtime.cinemaId = room.data?.data?.cinemaId;
   }
   if (data.startTime) {
     updateShowtime.startTime = data.startTime;

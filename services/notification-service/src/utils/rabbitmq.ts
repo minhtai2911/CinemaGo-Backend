@@ -37,6 +37,7 @@ export const subscribeToQueue = async (
   await channel.bindQueue(queue.queue, EXCHANGE_NAME, routingKey);
 
   channel.consume(queue.queue, (msg) => {
+    logger.info(`Received message from ${routingKey}`);
     if (msg) {
       const content = JSON.parse(msg.content.toString());
       callback(content);

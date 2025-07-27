@@ -22,6 +22,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ message: "All fields are required" });
   }
   const user = await AuthService.signup(email, password, gender, fullname);
+  await AuthService.sendVerificationLink(email);
   res.status(201).json({ data: user, message: "User created successfully" });
 });
 
@@ -78,16 +79,16 @@ export const resetPassword = asyncHandler(
   }
 );
 
-export const sendVerificationLink = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-    const message = await AuthService.sendVerificationLink(email);
-    res.status(200).json(message);
-  }
-);
+// export const sendVerificationLink = asyncHandler(
+//   async (req: Request, res: Response) => {
+//     const { email } = req.body;
+//     if (!email) {
+//       return res.status(400).json({ message: "Email is required" });
+//     }
+//     const message = await AuthService.sendVerificationLink(email);
+//     res.status(200).json(message);
+//   }
+// );
 
 export const verifyAccountByLink = asyncHandler(
   async (req: Request, res: Response) => {
