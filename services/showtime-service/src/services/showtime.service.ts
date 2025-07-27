@@ -140,7 +140,7 @@ export const updateShowtimeById = async (
       });
       throw new CustomError("Failed to fetch room", 500);
     }
-    updateShowtime.cinemaId = room.data.cinemaId;
+    updateShowtime.cinemaId = room.data?.data?.cinemaId;
   }
   if (data.startTime) {
     updateShowtime.startTime = data.startTime;

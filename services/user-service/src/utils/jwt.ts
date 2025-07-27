@@ -49,8 +49,6 @@ export const generateTokens = async (
 
   logger.info("Tokens generated successfully", {
     userId,
-    accessToken,
-    refreshToken,
   });
   return { accessToken, refreshToken };
 };
