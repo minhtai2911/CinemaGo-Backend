@@ -122,7 +122,7 @@ export const reviewResolver = {
       }
       // Predict sentiment for the review content
       const response = await axios.post(
-        `${process.env.SENTIMENT_SERVICE_URL}/predict-sentiment`,
+        `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
         { text: content }
       );
       const label = response.data.label;
@@ -217,7 +217,7 @@ export const reviewResolver = {
       review.updatedAt = new Date();
       // Predict sentiment for the updated content
       const response = await axios.post(
-        `${process.env.SENTIMENT_SERVICE_URL}/predict-sentiment`,
+        `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
         { text: content }
       );
       const label = response.data.label;

@@ -23,6 +23,7 @@ function sanitizeRequestBody(body: Record<string, any>): Record<string, any> {
     "token",
     "accessToken",
     "refreshToken",
+    "otp",
   ];
   return Object.keys(body).reduce((sanitized, key) => {
     if (!sensitiveFields.includes(key)) {
@@ -41,7 +42,7 @@ const redisClient = new Redis(process.env.REDIS_URL as string);
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL as string,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -53,7 +54,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const ratelimitOptions = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -71,8 +72,10 @@ app.use(ratelimitOptions);
 
 app.use((req, res, next) => {
   logger.info(`Received ${req.method} request to ${req.url}`);
-  const sanitizedBody = sanitizeRequestBody(req.body);
-  logger.info(`Request body: ${JSON.stringify(sanitizedBody)}`);
+  if (req.body) {
+    const sanitizedBody = sanitizeRequestBody(req.body);
+    logger.info(`Request body: ${JSON.stringify(sanitizedBody)}`);
+  }
   next();
 });
 
@@ -140,6 +143,7 @@ app.use(
   verifyToken,
   proxy(process.env.MOVIE_SERVICE_URL as string, {
     ...proxyOptions,
+    limit: "100mb",
     proxyReqOptDecorator: (proxyReqOpts: any, srcReq: AuthenticatedRequest) => {
       proxyReqOpts.headers ||= {};
 
