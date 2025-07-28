@@ -44,7 +44,7 @@ export const reviewTypeDef = `#graphql
             status: String
         ): PaginatedReviews!
 
-        getReviewsById(reviewId: ID!): Review!
+        getReviewById(reviewId: String!): Review!
     }
 
     type Mutation {
@@ -55,17 +55,17 @@ export const reviewTypeDef = `#graphql
         ): Review!
 
         replyToReview(
-            reviewId: ID!
+            reviewId: String!
             content: String!
         ): Review!
 
         updateReviewById(
-            reviewId: ID!
+            reviewId: String!
             content: String
             rating: Float
         ): Review!
 
-        hideReviewById(reviewId: ID!): Review!
-        unhideReviewById(reviewId: ID!): Review!
+        hideReviewById(reviewId: String!): Review!
+        unhideReviewById(reviewId: String!): Review!
     }
 `;

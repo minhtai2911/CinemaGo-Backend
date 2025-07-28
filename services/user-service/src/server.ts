@@ -8,6 +8,7 @@ import logger from "./utils/logger.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { connectRabbitMQ } from "./utils/rabbitmq.js";
 
 declare global {
   namespace Express {
@@ -61,6 +62,17 @@ io.on("connection", (socket) => {
 
 app.use(errorHandler);
 
-server.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectRabbitMQ();
+
+    app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    logger.error("Failed to connect to server", error);
+    process.exit(1);
+  }
+}
+
+startServer();

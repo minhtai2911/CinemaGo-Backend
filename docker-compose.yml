@@ -63,10 +63,10 @@ services:
       postgres:
         condition: service_healthy
 
-  # sentiment-service:
-  #   build: 
-  #     context: ./services/sentiment-service
-  #     dockerfile: Dockerfile
+  sentiment-service:
+    build: 
+      context: ./services/sentiment-service
+      dockerfile: Dockerfile
 
   review-service:
     build: 
@@ -76,6 +76,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      sentiment-service:
+        condition: service_started
 
   payment-service:
     build: 

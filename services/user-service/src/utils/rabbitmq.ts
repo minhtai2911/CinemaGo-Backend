@@ -6,12 +6,22 @@ let channel: amqp.Channel;
 export const EXCHANGE_NAME = "notification_exchange";
 
 export const connectRabbitMQ = async () => {
-  const connection = await amqp.connect(process.env.RABBITMQ_URL as string);
-  channel = await connection.createChannel();
-  await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: false });
+  const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq";
+  const RETRY_DELAY = 5000;
 
-  logger.info("Connected to RabbitMQ");
-  return channel;
+  while (true) {
+    try {
+      const connection = await amqp.connect(RABBITMQ_URL);
+      channel = await connection.createChannel();
+      await channel.assertExchange(EXCHANGE_NAME, "topic", { durable: false });
+
+      logger.info("Connected to RabbitMQ");
+      return channel;
+    } catch (error) {
+      logger.warn("RabbitMQ not ready. Retrying in 5 seconds...");
+      await new Promise((res) => setTimeout(res, RETRY_DELAY));
+    }
+  }
 };
 
 export const publishToQueue = async (routingKey: string, message: any) => {

@@ -68,7 +68,7 @@ export const reviewResolver = {
         data: reviews,
       };
     },
-    getReviewsById: async (_: any, { reviewId }: { reviewId: string }) => {
+    getReviewById: async (_: any, { reviewId }: { reviewId: string }) => {
       // Check if reviewId is provided
       if (!reviewId) {
         logger.error("Review ID must be provided");
