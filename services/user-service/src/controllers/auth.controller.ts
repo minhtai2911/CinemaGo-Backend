@@ -79,16 +79,16 @@ export const resetPassword = asyncHandler(
   }
 );
 
-// export const sendVerificationLink = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const { email } = req.body;
-//     if (!email) {
-//       return res.status(400).json({ message: "Email is required" });
-//     }
-//     const message = await AuthService.sendVerificationLink(email);
-//     res.status(200).json(message);
-//   }
-// );
+export const sendVerificationLink = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const message = await AuthService.sendVerificationLink(email);
+    res.status(200).json(message);
+  }
+);
 
 export const verifyAccountByLink = asyncHandler(
   async (req: Request, res: Response) => {
