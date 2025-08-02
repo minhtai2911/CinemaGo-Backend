@@ -1,0 +1,153 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: 
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: ./api-gateway/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  user-service:
+    build: 
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    env_file: ./services/user-service/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  movie-service:
+    build: 
+      context: ./services/movie-service
+      dockerfile: Dockerfile
+    env_file: ./services/movie-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cinema-service:
+    build: 
+      context: ./services/cinema-service
+      dockerfile: Dockerfile
+    env_file: ./services/cinema-service/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  showtime-service:
+    build: 
+      context: ./services/showtime-service
+      dockerfile: Dockerfile  
+    env_file: ./services/showtime-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  booking-service:
+    build: 
+      context: ./services/booking-service
+      dockerfile: Dockerfile
+    env_file: ./services/booking-service/.env
+    depends_on:
+      redis: 
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  sentiment-service:
+    build: 
+      context: ./services/sentiment-service
+      dockerfile: Dockerfile
+
+  review-service:
+    build: 
+      context: ./services/review-service
+      dockerfile: Dockerfile
+    env_file: ./services/review-service/.env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      sentiment-service:
+        condition: service_started
+
+  payment-service:
+    build: 
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    env_file: ./services/payment-service/.env
+    depends_on:
+      postgres: 
+       condition: service_healthy
+    
+  notification-service:
+    build: 
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    env_file: ./services/notification-service/.env
+    depends_on:
+      rabbitmq: 
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=cinema_go
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo-data:
+  postgres_data:

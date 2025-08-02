@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Showtime {
+  id        String   @id @default(uuid())
+  movieId   String
+  roomId    String
+  cinemaId  String
+  startTime DateTime
+  endTime   DateTime
+  price     Int
+  language  String   @default("vi")
+  subtitle  Boolean  @default(true)
+  format    String   @default("2D")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([movieId], name: "idx_showtime_movie_id")
+  @@index([roomId], name: "idx_showtime_room_id")
+  @@map("showtimes")
+}

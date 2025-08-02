@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cinema {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  address   String
+  city      String
+  isActive  Boolean  @default(true)
+  longitude Float?
+  latitude  Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Room      Room[]
+
+  @@map("cinemas")
+}
+
+model Room {
+  id         String   @id @default(uuid())
+  name       String
+  cinemaId   String
+  cinema     Cinema   @relation(fields: [cinemaId], references: [id])
+  totalSeats Int
+  seatLayout Json
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Seat       Seat[]
+
+  @@unique([cinemaId, name])
+  @@map("rooms")
+}
+
+model Seat {
+  id         String   @id @default(uuid())
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id])
+  seatNumber String
+  seatType   String   @default("NORMAL")
+  extraPrice Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([roomId, seatNumber])
+  @@map("seats")
+}
