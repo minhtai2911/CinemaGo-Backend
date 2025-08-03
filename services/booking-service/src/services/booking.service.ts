@@ -18,7 +18,7 @@ export const getBookingsByUserId = async ({
       userId,
     },
     include: {
-      BookingSeat: true,
+      bookingSeats: true,
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -48,7 +48,7 @@ export const getBookingById = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      BookingSeat: true,
+      bookingSeats: true,
     },
   });
   // If booking not found, throw a custom error
@@ -105,7 +105,7 @@ export const createBooking = async (
         userId,
         showtimeId,
         totalPrice,
-        BookingSeat: {
+        bookingSeats: {
           create: seatIds.map((seatId) => ({
             seatId,
             showtimeId,
@@ -113,7 +113,7 @@ export const createBooking = async (
         },
       },
       include: {
-        BookingSeat: true,
+        bookingSeats: true,
       },
     });
     // Delete the held seats from Redis
