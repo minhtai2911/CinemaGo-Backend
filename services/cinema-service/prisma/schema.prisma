@@ -24,7 +24,7 @@ model Cinema {
   latitude  Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Room      Room[]
+  rooms      Room[]
 
   @@map("cinemas")
 }
@@ -39,7 +39,7 @@ model Room {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  Seat       Seat[]
+  seats      Seat[]
 
   @@unique([cinemaId, name])
   @@map("rooms")

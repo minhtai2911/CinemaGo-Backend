@@ -49,7 +49,7 @@ export const getRoomById = async (roomId: string) => {
   const room = await prisma.room.findUnique({
     where: { id: roomId },
     include: {
-      Seat: true,
+      seats: true,
     },
   });
   // If room not found, throw a custom error
