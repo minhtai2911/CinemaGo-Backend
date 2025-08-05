@@ -21,7 +21,7 @@ export const getShowtimes = asyncHandler(
       limit: limitNumber,
       movieId: movieId ? String(movieId) : undefined,
       cinemaId: cinemaId ? String(cinemaId) : undefined,
-      isActive: isActive ? Boolean(isActive) : undefined,
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
       startTime: startTime ? new Date(startTime as string) : undefined,
       endTime: endTime ? new Date(endTime as string) : undefined,
     });

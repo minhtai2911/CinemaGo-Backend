@@ -11,7 +11,7 @@ export const getRooms = asyncHandler(async (req: Request, res: Response) => {
     page: pageNumber,
     limit: limitNumber,
     search: search ? String(search) : "",
-    isActive: isActive ? Boolean(isActive) : undefined,
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
     startTime: startTime ? new Date(startTime as string) : undefined,
     endTime: endTime ? new Date(endTime as string) : undefined,
   });

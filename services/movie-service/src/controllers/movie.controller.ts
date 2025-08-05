@@ -16,7 +16,7 @@ export const getMovies = asyncHandler(async (req: Request, res: Response) => {
     search: search ? String(search) : "",
     genreIds: genreIds.length > 0 ? genreIds : undefined,
     rating: rating ? Number(rating) : undefined,
-    isActive: isActive ? Boolean(isActive) : undefined,
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
   res.status(200).json({
     pagination: {

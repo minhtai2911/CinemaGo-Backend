@@ -10,7 +10,7 @@ export const getCinemas = asyncHandler(async (req: Request, res: Response) => {
     page: pageNumber,
     limit: limitNumber,
     search: search ? String(search) : "",
-    isActive: isActive ? Boolean(isActive) : undefined,
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
   res.status(200).json({
     pagination: {

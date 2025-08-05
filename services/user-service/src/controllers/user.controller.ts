@@ -12,7 +12,7 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     limit: limitNumber,
     search: search ? String(search) : "",
     role: role ? String(role) : undefined,
-    isActive: isActive ? Boolean(isActive) : undefined,
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
   res.status(200).json({
     pagination: {
