@@ -4,7 +4,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, role } = req.query;
+  const { page, limit, search, role, isActive } = req.query;
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(limit) || 10;
   const { users, totalItems, totalPages } = await UserService.getUsers({
@@ -12,6 +12,7 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     limit: limitNumber,
     search: search ? String(search) : "",
     role: role ? String(role) : undefined,
+    isActive: isActive ? Boolean(isActive) : undefined,
   });
   res.status(200).json({
     pagination: {

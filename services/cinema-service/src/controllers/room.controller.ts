@@ -4,13 +4,16 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getRooms = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search } = req.query;
+  const { page, limit, search, isActive, startTime, endTime } = req.query;
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(limit) || 10;
   const data = await roomService.getRooms({
     page: pageNumber,
     limit: limitNumber,
     search: search ? String(search) : "",
+    isActive: isActive ? Boolean(isActive) : undefined,
+    startTime: startTime ? new Date(startTime as string) : undefined,
+    endTime: endTime ? new Date(endTime as string) : undefined,
   });
   res.status(200).json({
     pagination: {

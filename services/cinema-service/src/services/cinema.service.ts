@@ -6,15 +6,18 @@ export const getCinemas = async ({
   page = 1,
   limit = 10,
   search = "",
+  isActive,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  isActive?: boolean;
 }) => {
   // Fetch cinemas with pagination and search functionality
   const cinemas = await prisma.cinema.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
+      ...(isActive && { isActive }),
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -23,6 +26,7 @@ export const getCinemas = async ({
   const totalItems = await prisma.cinema.count({
     where: {
       name: { contains: search, mode: "insensitive" },
+      ...(isActive && { isActive }),
     },
   });
   logger.info("Fetched cinemas", { cinemas, totalItems, page, limit });
