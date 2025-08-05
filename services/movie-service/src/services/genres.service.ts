@@ -6,15 +6,18 @@ export const getGenres = async ({
   page = 1,
   limit = 10,
   search = "",
+  isActive,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  isActive?: boolean;
 }) => {
   // Fetch genres with pagination and search
   const genres = await prisma.genres.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
+      ...(isActive && { isActive }),
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -23,6 +26,7 @@ export const getGenres = async ({
   const totalItems = await prisma.genres.count({
     where: {
       name: { contains: search, mode: "insensitive" },
+      ...(isActive && { isActive }),
     },
   });
   logger.info("Fetched genres", { genres, totalItems, page, limit });
