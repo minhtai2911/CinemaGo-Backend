@@ -12,12 +12,14 @@ export const getMovies = async ({
   page = 1,
   limit = 10,
   search = "",
+  isActive,
   genreIds,
   rating,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  isActive?: boolean;
   genreIds?: string[];
   rating?: number;
 }) => {
@@ -38,9 +40,13 @@ export const getMovies = async ({
   if (search) {
     where.title = { contains: search, mode: "insensitive" };
   }
+  if (isActive !== undefined) {
+    where.isActive = isActive;
+  }
   const movies = await prisma.movie.findMany({
     where,
     include: { genres: true },
+    orderBy: { createdAt: "desc" },
     skip: (page - 1) * limit,
     take: limit,
   });

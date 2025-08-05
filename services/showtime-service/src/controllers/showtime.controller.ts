@@ -4,7 +4,16 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getShowtimes = asyncHandler(
   async (req: Request, res: Response) => {
-    const { page, limit, movieId, cinemaId } = req.query;
+    const {
+      page,
+      limit,
+      movieId,
+      cinemaId,
+      isActive,
+      startTime,
+      endTime,
+      roomId,
+    } = req.query;
     const pageNumber = Number(page) || 1;
     const limitNumber = Number(limit) || 10;
     const data = await showtimeService.getShowtimes({
@@ -12,6 +21,9 @@ export const getShowtimes = asyncHandler(
       limit: limitNumber,
       movieId: movieId ? String(movieId) : undefined,
       cinemaId: cinemaId ? String(cinemaId) : undefined,
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
+      startTime: startTime ? new Date(startTime as string) : undefined,
+      endTime: endTime ? new Date(endTime as string) : undefined,
     });
     res.status(200).json({
       pagination: {
@@ -112,9 +124,7 @@ export const archiveShowtimeById = asyncHandler(
     if (!showtimeId) {
       return res.status(400).json({ message: "Showtime ID is required" });
     }
-    const message = await showtimeService.archiveShowtimeById(
-      showtimeId
-    );
+    const message = await showtimeService.archiveShowtimeById(showtimeId);
     res.status(200).json(message);
   }
 );
@@ -125,9 +135,24 @@ export const restoreShowtimeById = asyncHandler(
     if (!showtimeId) {
       return res.status(400).json({ message: "Showtime ID is required" });
     }
-    const message = await showtimeService.restoreShowtimeById(
-      showtimeId
-    );
+    const message = await showtimeService.restoreShowtimeById(showtimeId);
     res.status(200).json(message);
+  }
+);
+
+export const getBusyRoomIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { startTime, endTime, cinemaId } = req.query;
+    if (!startTime || !endTime) {
+      return res
+        .status(400)
+        .json({ message: "Start time and end time are required" });
+    }
+    const busyRoomIds = await showtimeService.getBusyRoomIds(
+      new Date(startTime as string),
+      new Date(endTime as string),
+      cinemaId ? String(cinemaId) : undefined
+    );
+    res.status(200).json({ data: busyRoomIds });
   }
 );

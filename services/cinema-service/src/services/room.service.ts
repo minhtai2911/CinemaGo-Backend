@@ -1,6 +1,7 @@
 import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
 import logger from "../utils/logger.js";
+import axios from "axios";
 
 type Seat = {
   row: string;
@@ -12,11 +13,32 @@ export const getRooms = async ({
   page = 1,
   limit = 10,
   search = "",
+  isActive,
+  startTime,
+  endTime,
+  cinemaId,
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  isActive?: boolean;
+  startTime?: Date;
+  endTime?: Date;
+  cinemaId?: string;
 }) => {
+  let response;
+  if (startTime && endTime) {
+    response = await axios.get(
+      `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/get-busy-rooms`,
+      {
+        params: {
+          startTime,
+          endTime,
+          ...(cinemaId && { cinemaId }),
+        },
+      }
+    );
+  }
   // Fetch rooms with pagination and search functionality
   const rooms = await prisma.room.findMany({
     where: {
@@ -24,6 +46,13 @@ export const getRooms = async ({
         contains: search,
         mode: "insensitive",
       },
+      ...(isActive && { isActive }),
+      ...(cinemaId && { cinemaId }),
+      ...(startTime && endTime && {
+        id: {
+          notIn: response?.data?.data || [],
+        },
+      }),
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -35,6 +64,13 @@ export const getRooms = async ({
         contains: search,
         mode: "insensitive",
       },
+      ...(isActive && { isActive }),
+      ...(cinemaId && { cinemaId }),
+      ...(startTime && endTime && {
+        id: {
+          notIn: response?.data?.data || [],
+        },
+      }),
     },
   });
   return {

@@ -13,11 +13,13 @@ export const getUsers = async ({
   limit = 10,
   search = "",
   role,
+  isActive,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
+  isActive?: boolean;
 }) => {
   const users = await prisma.user.findMany({
     where: {
@@ -28,6 +30,7 @@ export const getUsers = async ({
         ],
       }),
       ...(role && { role: role as Role }),
+      ...(isActive && { isActive }),
     },
     skip: (page - 1) * limit,
     take: limit,
@@ -41,6 +44,7 @@ export const getUsers = async ({
         ],
       }),
       ...(role && { role: role as Role }),
+      ...(isActive && { isActive }),
     },
   });
   logger.info("Fetched users", { users, totalItems, page, limit });
