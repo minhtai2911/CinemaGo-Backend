@@ -13,14 +13,6 @@ dotenv.config();
 const PORT = process.env.PORT || 8002;
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL as string,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
