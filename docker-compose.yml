@@ -67,7 +67,7 @@ services:
     build: 
       context: ./services/sentiment-service
       dockerfile: Dockerfile
-    env_file: ./services/booking-service/.env
+    env_file: ./services/sentiment-service/.env
 
   review-service:
     build: 
