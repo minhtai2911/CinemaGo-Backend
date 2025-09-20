@@ -1,17 +1,30 @@
 import express from "express";
 import * as UserController from "../controllers/user.controller.js";
-import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
+import {
+  authenticateRequest,
+  authorizeRole,
+} from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
 router.get("/profile", authenticateRequest, UserController.getProfile);
-router.put("/profile", authenticateRequest, upload.single("avatar"), UserController.updateProfile);
-router.get("/", authenticateRequest, authorizeRole("ADMIN"), UserController.getUsers);
+router.put(
+  "/profile",
+  authenticateRequest,
+  upload.single("avatar"),
+  UserController.updateProfile
+);
+router.get(
+  "/",
+  authenticateRequest,
+  authorizeRole("ADMIN", "EMPLOYEE"),
+  UserController.getUsers
+);
 router.get(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "EMPLOYEE"),
   UserController.getUserById
 );
 router.post(
