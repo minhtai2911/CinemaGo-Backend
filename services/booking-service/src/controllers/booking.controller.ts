@@ -41,9 +41,12 @@ export const getBookingById = asyncHandler(
 
 export const createBooking = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.user?.userId;
+    let userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (req.user?.role !== "USER") {
+      userId = undefined; // For ADMIN or EMPLOYEE, set userId to undefined to allow booking on behalf of users
     }
     const { showtimeId, seatIds } = req.body;
     if (!showtimeId || !seatIds || !Array.isArray(seatIds)) {

@@ -62,7 +62,7 @@ export const getBookingById = async (bookingId: string) => {
 
 export const createBooking = async (
   redisClient: any,
-  userId: string,
+  userId: string | undefined,
   showtimeId: string,
   seatIds: string[]
 ) => {
