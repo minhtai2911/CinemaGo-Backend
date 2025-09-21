@@ -1,13 +1,10 @@
 import express from "express";
 import * as NotificationController from "../controllers/notification.controller.js";
-import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.post(
   "/public/send-email",
-  authenticateRequest,
-  authorizeRole("ADMIN"),
   NotificationController.sendNotificationEmail
 );
 
