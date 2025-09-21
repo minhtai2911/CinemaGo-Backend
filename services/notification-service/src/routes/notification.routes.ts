@@ -5,7 +5,7 @@ import { authenticateRequest, authorizeRole } from "../middlewares/authMiddlewar
 const router = express.Router();
 
 router.post(
-  "/send-email",
+  "/public/send-email",
   authenticateRequest,
   authorizeRole("ADMIN"),
   NotificationController.sendNotificationEmail
