@@ -8,11 +8,17 @@ export const getShowtimes = async ({
   limit = 10,
   movieId,
   cinemaId,
+  isActive,
+  startTime,
+  endTime,
 }: {
   page?: number;
   limit?: number;
   movieId?: string;
   cinemaId?: string;
+  isActive?: boolean;
+  startTime?: Date;
+  endTime?: Date;
 }) => {
   // Fetch showtimes with pagination and filters
   const where: any = {};
@@ -21,6 +27,15 @@ export const getShowtimes = async ({
   }
   if (cinemaId) {
     where.cinemaId = cinemaId;
+  }
+  if (isActive !== undefined) {
+    where.isActive = isActive;
+  }
+  if (startTime && endTime) {
+    where.startTime = {
+      gte: startTime,
+      lte: endTime,
+    };
   }
   const showtimes = await prisma.showtime.findMany({
     where,
@@ -77,7 +92,9 @@ export const createShowtime = async (
   // Check if the room exists
   let room;
   try {
-    room = await axios.get(`${process.env.CINEMA_SERVICE_URL}/api/rooms/public/${roomId}`);
+    room = await axios.get(
+      `${process.env.CINEMA_SERVICE_URL}/api/rooms/public/${roomId}`
+    );
   } catch (error: any) {
     if (error?.response && error?.response?.status === 404) {
       logger.warn("Room not found", { roomId });
@@ -195,4 +212,29 @@ export const restoreShowtimeById = async (showtimeId: string) => {
   }
   logger.info("Restored showtime", { showtime });
   return { message: "Showtime restored successfully" };
+};
+
+export const getBusyRoomIds = async (
+  startTime: Date,
+  endTime: Date,
+  cinemaId?: string
+) => {
+  const showtimes: { roomId: string }[] = await prisma.showtime.findMany({
+    where: {
+      startTime: { lt: endTime },
+      endTime: { gt: startTime },
+      ...(cinemaId && { cinemaId }),
+    },
+    select: {
+      roomId: true,
+    },
+  });
+
+  const busyRoomIds = Array.from(
+    new Set(showtimes.map((showtime) => showtime.roomId))
+  );
+
+  logger.info("Fetched busy room IDs", { busyRoomIds });
+
+  return busyRoomIds;
 };

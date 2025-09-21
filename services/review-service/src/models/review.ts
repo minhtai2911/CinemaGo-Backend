@@ -46,7 +46,7 @@ const reviewSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["Tiêu cực", "Tích cực", "Trung lập", "POSITIVE", "NEGATIVE", "NEUTRAL"],
+      enum: ["Tiêu cực", "Tích cực", "Trung lập", "POSITIVE", "NEGATIVE", "NEUTRAL", "Không khả dụng", "UNAVAILABLE"],
     },
   },
   { timestamps: true }

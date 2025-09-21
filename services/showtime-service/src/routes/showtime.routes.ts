@@ -5,6 +5,7 @@ import { authenticateRequest, authorizeRole } from "../middlewares/authMiddlewar
 const router = express.Router();
 
 router.get("/public", ShowtimeController.getShowtimes);
+router.get("/public/get-busy-rooms", ShowtimeController.getBusyRoomIds);
 router.get("/public/:id", ShowtimeController.getShowtimeById);
 router.post("/", authenticateRequest, authorizeRole("ADMIN"), ShowtimeController.createShowtime);
 router.put("/:id", authenticateRequest, authorizeRole("ADMIN"), ShowtimeController.updateShowtimeById);

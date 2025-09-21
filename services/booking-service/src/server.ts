@@ -21,14 +21,6 @@ const redisClient = new Redis(process.env.REDIS_URL as string);
 const PORT = process.env.PORT || 8005;
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL as string,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

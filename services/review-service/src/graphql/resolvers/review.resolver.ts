@@ -16,6 +16,7 @@ export const reviewResolver = {
         userId,
         type,
         status,
+        isActive,
       }: {
         page?: number;
         limit?: number;
@@ -24,6 +25,7 @@ export const reviewResolver = {
         userId?: string;
         type?: string;
         status?: string;
+        isActive?: boolean;
       }
     ) => {
       const pageNumber = Number(page) || 1;
@@ -37,6 +39,7 @@ export const reviewResolver = {
         ...(userId && { userId }),
         ...(type && { type }),
         ...(status && { status }),
+        ...(isActive && { isActive }),
       })
         .skip((pageNumber - 1) * limitNumber)
         .limit(limitNumber);
@@ -49,6 +52,7 @@ export const reviewResolver = {
         ...(userId && { userId }),
         ...(type && { type }),
         ...(status && { status }),
+        ...(isActive && { isActive }),
       });
       // Calculate total pages
       const totalPages = Math.ceil(totalItems / limitNumber);
@@ -121,24 +125,29 @@ export const reviewResolver = {
         throw new CustomError("You have already reviewed this movie", 400);
       }
       // Predict sentiment for the review content
-      const response = await axios.post(
-        `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
-        { text: content }
-      );
-      const label = response.data.label;
       let type: string;
-      switch (label) {
-        case "POS":
-          type = "Tích cực";
-          break;
-        case "NEG":
-          type = "Tiêu cực";
-          break;
-        case "NEU":
-          type = "Trung lập";
-          break;
-        default:
-          type = "Trung lập";
+      try {
+        const response = await axios.post(
+          `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
+          { text: content }
+        );
+        const label = response.data.label;
+        switch (label) {
+          case "POS":
+            type = "Tích cực";
+            break;
+          case "NEG":
+            type = "Tiêu cực";
+            break;
+          case "NEU":
+            type = "Trung lập";
+            break;
+          default:
+            type = "Không khả dụng";
+        }
+      } catch (error) {
+        logger.warn("Sentiment prediction failed", { error });
+        type = "Không khả dụng";
       }
       const review = new Review({
         userId,
@@ -216,25 +225,29 @@ export const reviewResolver = {
       review.rating = rating;
       review.updatedAt = new Date();
       // Predict sentiment for the updated content
-      const response = await axios.post(
-        `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
-        { text: content }
-      );
-      const label = response.data.label;
-      switch (label) {
-        case "POS":
-          review.type = "Tích cực";
-          break;
-        case "NEG":
-          review.type = "Tiêu cực";
-          break;
-        case "NEU":
-          review.type = "Trung lập";
-          break;
-        default:
-          review.type = "Trung lập";
+      try {
+        const response = await axios.post(
+          `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
+          { text: content }
+        );
+        const label = response.data.label;
+        switch (label) {
+          case "POS":
+            review.type = "Tích cực";
+            break;
+          case "NEG":
+            review.type = "Tiêu cực";
+            break;
+          case "NEU":
+            review.type = "Trung lập";
+            break;
+          default:
+            review.type = "Trung lập";
+        }
+      } catch (error) {
+        logger.warn("Sentiment prediction failed", { error });
+        review.type = "Không khả dụng";
       }
-
       return await review.save();
     },
 

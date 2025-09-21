@@ -23,14 +23,7 @@ dotenv.config();
 const PORT = process.env.PORT || 8001;
 const app = express();
 const server = http.createServer(app);
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL as string,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  },
-});
+const io = new SocketIOServer(server);
 
 app.use(helmet());
 app.use(bodyParser.json());

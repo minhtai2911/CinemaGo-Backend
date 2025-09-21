@@ -3,13 +3,14 @@ import * as GenresService from "../services/genres.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getGenres = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search } = req.query;
+  const { page, limit, search, isActive } = req.query;
   const pageNumber = Number(page) || 1;
   const limitNumber = Number(limit) || 10;
   const { genres, totalItems, totalPages } = await GenresService.getGenres({
     page: pageNumber,
     limit: limitNumber,
     search: search ? String(search) : "",
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
   res.status(200).json({
     pagination: {
