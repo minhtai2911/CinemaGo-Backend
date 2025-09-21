@@ -53,8 +53,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const ratelimitOptions = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
+  windowMs: 5 * 60 * 1000,
+  max: 100000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
