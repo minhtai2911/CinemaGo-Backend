@@ -64,16 +64,23 @@ export const login = async (email: string, password: string) => {
     logger.warn("User not found", { email });
     throw new CustomError("User not found", 404);
   }
+  // Check if user is active
+  if (!user.isActive) {
+    await sendVerificationLink(email);
+    logger.warn("User account is not active", { email });
+    throw new CustomError("User account is not active", 400);
+  }
   // Check the password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     logger.warn("Invalid password", { email });
-    throw new CustomError("Invalid password", 401);
+    throw new CustomError("Invalid password", 400);
   }
   // Generate tokens
   const { accessToken, refreshToken } = await generateTokens(
     user.id,
     user.role,
+    user.fullname,
     user.avatarUrl,
     user.publicId
   );
@@ -100,7 +107,7 @@ export const refreshAccessToken = async (userId: string, token: string) => {
   });
   if (!decoded) {
     logger.warn("Invalid refresh token", { token });
-    throw new CustomError("Invalid refresh token", 401);
+    throw new CustomError("Invalid refresh token", 400);
   }
   // Check if the refresh token is expired
   const currentTime = Math.floor(Date.now() / 1000);
@@ -109,12 +116,13 @@ export const refreshAccessToken = async (userId: string, token: string) => {
   );
   if (expiresAtInSeconds < currentTime) {
     logger.warn("Refresh token has expired", { token });
-    throw new CustomError("Refresh token has expired", 401);
+    throw new CustomError("Refresh token has expired", 400);
   }
   // Generate new access token
   const { accessToken, refreshToken } = await generateTokens(
     decoded.user.id,
     decoded.user.role,
+    decoded.user.fullname,
     decoded.user.avatarUrl,
     decoded.user.publicId
   );
@@ -227,7 +235,7 @@ export const verifyOtp = async (email: string, otp: string) => {
   });
   if (!otpRecord) {
     logger.warn("Invalid or expired OTP", { email, otp });
-    throw new CustomError("Invalid or expired OTP", 401);
+    throw new CustomError("Invalid or expired OTP", 400);
   }
   // Verify the OTP
   const isOtpValid = await bcrypt.compare(otp, otpRecord.otp);
@@ -252,7 +260,7 @@ export const resetPassword = async (
   const isOtpValid = await verifyOtp(email, otp);
   if (!isOtpValid) {
     logger.warn("Invalid OTP for password reset", { email, otp });
-    throw new CustomError("Invalid OTP", 401);
+    throw new CustomError("Invalid OTP", 400);
   }
   // Hash the new password
   const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -344,7 +352,7 @@ export const verifyAccountByLink = async (userId: string, token: string) => {
   });
   if (!verificationToken) {
     logger.warn("Invalid or expired verification token", { token, userId });
-    throw new CustomError("Invalid or expired verification token", 401);
+    throw new CustomError("Invalid or expired verification token", 400);
   }
   // Update the user's active status
   await prisma.user.update({
@@ -385,7 +393,7 @@ export const changePassword = async (
   const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
   if (!isOldPasswordValid) {
     logger.warn("Invalid old password", { userId });
-    throw new CustomError("Invalid old password", 401);
+    throw new CustomError("Invalid old password", 400);
   }
   // Hash the new password
   const hashedNewPassword = await bcrypt.hash(newPassword, 10);
