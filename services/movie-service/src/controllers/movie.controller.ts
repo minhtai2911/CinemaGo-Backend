@@ -3,7 +3,8 @@ import * as MovieService from "../services/movie.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getMovies = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, rating, genreQuery, isActive } = req.query;
+  const { page, limit, search, rating, genreQuery, isActive, status } =
+    req.query;
   let genreIds: string[] = [];
   if (genreQuery) {
     genreIds = (genreQuery as string).split(",").map((id: string) => id.trim());
@@ -16,7 +17,8 @@ export const getMovies = asyncHandler(async (req: Request, res: Response) => {
     search: search ? String(search) : "",
     genreIds: genreIds.length > 0 ? genreIds : undefined,
     rating: rating ? Number(rating) : undefined,
-    isActive: isActive !== undefined ? isActive === "true" : undefined,
+    isActive: isActive ? isActive === "true" : undefined,
+    status: status ? String(status) : undefined,
   });
   res.status(200).json({
     pagination: {
@@ -40,7 +42,8 @@ export const getMovieById = asyncHandler(
 );
 
 export const createMovie = asyncHandler(async (req: Request, res: Response) => {
-  const { title, description, duration, releaseDate, genresIds } = req.body;
+  const { title, description, duration, releaseDate, genresIds, trailerPath } =
+    req.body;
   const genresArray = genresIds
     ? genresIds.split(",").map((g: string) => g.trim())
     : [];
@@ -58,7 +61,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     !releaseDate ||
     !genresArray ||
     !thumbnail ||
-    !trailerUrl
+    (!trailerUrl && !trailerPath)
   ) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -69,7 +72,8 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     new Date(releaseDate),
     genresArray,
     thumbnail,
-    trailerUrl
+    trailerUrl,
+    trailerPath
   );
   res.status(201).json({ data: movie });
 });
@@ -77,7 +81,14 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
 export const updateMovieById = asyncHandler(
   async (req: Request, res: Response) => {
     const movieId = req.params.movieId;
-    const { title, description, duration, releaseDate, genresIds } = req.body;
+    const {
+      title,
+      description,
+      duration,
+      releaseDate,
+      genresIds,
+      trailerPath,
+    } = req.body;
 
     const genresArray = genresIds
       ? genresIds.split(",").map((g: string) => g.trim())
@@ -112,6 +123,10 @@ export const updateMovieById = asyncHandler(
       data.trailerUrl = trailerUrl;
     }
 
+    if (trailerPath) {
+      data.trailerPath = trailerPath;
+    }
+
     const movie = await MovieService.updateMovieById(movieId, data);
     res.status(200).json({ data: movie });
   }
@@ -129,6 +144,25 @@ export const restoreMovieById = asyncHandler(
   async (req: Request, res: Response) => {
     const movieId = req.params.movieId;
     const message = await MovieService.restoreMovieById(movieId);
+    res.status(200).json(message);
+  }
+);
+
+export const updateMovieStatusByIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { movieIds, status } = req.body;
+
+    if (!movieIds || !Array.isArray(movieIds) || movieIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "movieIds must be a non-empty array" });
+    }
+
+    if (!status) {
+      return res.status(400).json({ message: "status is required" });
+    }
+
+    const message = await MovieService.updateMovieStatusByIds(movieIds, status);
     res.status(200).json(message);
   }
 );

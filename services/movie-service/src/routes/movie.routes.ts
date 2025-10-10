@@ -1,6 +1,9 @@
 import express from "express";
 import * as MovieController from "../controllers/movie.controller.js";
-import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
+import {
+  authenticateRequest,
+  authorizeRole,
+} from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
@@ -13,6 +16,12 @@ router.post(
   authorizeRole("ADMIN"),
   upload.fields([{ name: "thumbnail" }, { name: "trailer" }]),
   MovieController.createMovie
+);
+router.put(
+  "/status",
+  authenticateRequest,
+  authorizeRole("ADMIN"),
+  MovieController.updateMovieStatusByIds
 );
 router.put(
   "/:movieId",
