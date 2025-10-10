@@ -5,6 +5,7 @@ import logger from "./logger.js";
 export const generateTokens = async (
   userId: string,
   role: string,
+  fullname: string,
   avatarUrl: string,
   publicId: string
 ) => {
@@ -13,19 +14,17 @@ export const generateTokens = async (
     {
       userId: userId,
       role: role,
+      fullname: fullname,
       avatarUrl: avatarUrl,
       publicId: publicId,
     },
     process.env.ACCESS_TOKEN_SECRET || "defaultAccessTokenSecret",
-    { expiresIn: "60m" }
+    { expiresIn: "15m" }
   );
 
   const refreshToken = jwt.sign(
     {
       userId: userId,
-      role: role,
-      avatarUrl: avatarUrl,
-      publicId: publicId,
     },
     process.env.REFRESH_TOKEN_SECRET || "defaultRefreshTokenSecret",
     { expiresIn: "7d" }

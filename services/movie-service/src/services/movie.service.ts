@@ -151,8 +151,8 @@ export const updateMovieById = async (
     duration: number;
     releaseDate: Date;
     genres: string[];
-    thumbnail: string;
-    trailerUrl: string;
+    thumbnail?: string;
+    trailerUrl?: string;
   }
 ) => {
   // Check if movie exists
