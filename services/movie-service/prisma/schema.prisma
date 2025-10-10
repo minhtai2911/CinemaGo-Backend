@@ -15,20 +15,21 @@ datasource db {
 }
 
 model Movie {
-  id                String   @id @default(uuid())
-  title             String   @unique
+  id                String      @id @default(uuid())
+  title             String      @unique
   description       String
   duration          Int
   releaseDate       DateTime
-  rating            Float    @default(0.0)
+  rating            Float       @default(0.0)
   thumbnail         String
   thumbnailPublicId String
   trailerUrl        String
-  trailerPublicId   String
+  trailerPublicId   String?
   genres            Genres[]
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  isActive          Boolean     @default(true)
+  status            MovieStatus @default(COMING_SOON)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   @@index([title], name: "idx_movie_title")
   @@index([createdAt], name: "idx_movie_created_at")
@@ -46,4 +47,10 @@ model Genres {
 
   @@index([name], name: "idx_genres_name")
   @@map("genres")
+}
+
+enum MovieStatus {
+  COMING_SOON
+  NOW_SHOWING
+  ENDED
 }

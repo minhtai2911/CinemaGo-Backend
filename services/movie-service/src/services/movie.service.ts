@@ -7,6 +7,7 @@ import {
 } from "../utils/cloudinary.js";
 import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
+import { MovieStatus } from "../../generated/prisma/index.js";
 
 export const getMovies = async ({
   page = 1,
@@ -15,6 +16,7 @@ export const getMovies = async ({
   isActive,
   genreIds,
   rating,
+  status,
 }: {
   page?: number;
   limit?: number;
@@ -22,6 +24,7 @@ export const getMovies = async ({
   isActive?: boolean;
   genreIds?: string[];
   rating?: number;
+  status?: string;
 }) => {
   // Fetch movies with pagination, search, genre filter, and rating filter
   const where: any = {};
@@ -43,9 +46,17 @@ export const getMovies = async ({
   if (isActive !== undefined) {
     where.isActive = isActive;
   }
+  if (status) {
+    where.status = status;
+  }
+
   const movies = await prisma.movie.findMany({
     where,
-    include: { genres: true },
+    include: {
+      genres: {
+        where: { isActive: true },
+      },
+    },
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * limit,
     take: limit,
@@ -65,7 +76,11 @@ export const getMovieById = async (movieId: string) => {
   // Fetch movie by ID with genres
   const movie = await prisma.movie.findUnique({
     where: { id: movieId },
-    include: { genres: true },
+    include: {
+      genres: {
+        where: { isActive: true },
+      },
+    },
   });
   // Check if movie exists
   if (!movie) {
@@ -83,7 +98,8 @@ export const createMovie = async (
   releaseDate: Date,
   genres: string[],
   thumbnail: string,
-  trailerUrl: string
+  trailerUrl: string,
+  trailerPath: string
 ) => {
   // Check if movie already exists
   const existingMovie = await prisma.movie.findUnique({
@@ -97,11 +113,11 @@ export const createMovie = async (
 
   const [thumbnailUpload, trailerUpload] = await Promise.all([
     uploadImageToCloudinary(thumbnail),
-    uploadVideoToCloudinary(trailerUrl),
+    trailerUrl ? uploadVideoToCloudinary(trailerUrl) : Promise.resolve(null),
   ]);
 
   // Check if uploads were successful
-  if (!thumbnailUpload || !trailerUpload) {
+  if (!thumbnailUpload || (trailerUrl && !trailerUpload)) {
     logger.error("Failed to upload media to Cloudinary", {
       thumbnail,
       trailerUrl,
@@ -119,13 +135,17 @@ export const createMovie = async (
         releaseDate,
         thumbnail: thumbnailUpload.secure_url,
         thumbnailPublicId: thumbnailUpload.public_id,
-        trailerUrl: trailerUpload.secure_url,
-        trailerPublicId: trailerUpload.public_id,
+        trailerUrl: trailerUpload ? trailerUpload.secure_url : trailerPath,
+        trailerPublicId: trailerUpload ? trailerUpload.public_id : undefined,
         genres: {
           connect: genres.map((id) => ({ id })),
         },
       },
-      include: { genres: true },
+      include: {
+        genres: {
+          where: { isActive: true },
+        },
+      },
     });
     logger.info("Created movie", { movie });
     return movie;
@@ -135,9 +155,11 @@ export const createMovie = async (
       deleteImageFromCloudinary(thumbnailUpload.public_id).catch((err) => {
         logger.error("Failed to delete thumbnail", { err });
       }),
-      deleteVideoFromCloudinary(trailerUpload.public_id).catch((err) => {
-        logger.error("Failed to delete trailer", { err });
-      }),
+      trailerUpload
+        ? deleteVideoFromCloudinary(trailerUpload.public_id).catch((err) => {
+            logger.error("Failed to delete trailer", { err });
+          })
+        : Promise.resolve(),
     ]);
     throw new CustomError("Failed to create movie", 500);
   }
@@ -153,6 +175,7 @@ export const updateMovieById = async (
     genres: string[];
     thumbnail?: string;
     trailerUrl?: string;
+    trailerPath?: string;
   }
 ) => {
   // Check if movie exists
@@ -187,7 +210,7 @@ export const updateMovieById = async (
   }
   // If trailer URL is provided, upload it
   let trailerUpload;
-  if (data.trailerUrl) {
+  if (data.trailerUrl && movie.trailerPublicId) {
     await deleteVideoFromCloudinary(movie.trailerPublicId).catch((err) => {
       logger.error("Failed to delete old trailer", { err });
     });
@@ -206,12 +229,20 @@ export const updateMovieById = async (
       set: data.genres.map((id) => ({ id })),
     };
   }
+  // If trailerPath is provided, update it
+  if (data.trailerPath) {
+    updateData.trailerUrl = data.trailerPath;
+  }
   // Handle genres update
   try {
     const updatedMovie = await prisma.movie.update({
       where: { id: movieId },
       data: updateData,
-      include: { genres: true },
+      include: {
+        genres: {
+          where: { isActive: true },
+        },
+      },
     });
 
     logger.info("Updated movie", { updatedMovie });
@@ -273,4 +304,32 @@ export const restoreMovieById = async (movieId: string) => {
 
   logger.info("Restored movie", { restoredMovie });
   return { message: "Movie restored successfully" };
+};
+
+export const updateMovieStatusByIds = async (
+  movieIds: string[],
+  status: MovieStatus
+) => {
+  // Validate input
+  if (!Array.isArray(movieIds) || movieIds.length === 0) {
+    throw new CustomError("Movie IDs are required", 400);
+  }
+  // Validate status
+  if (!Object.values(MovieStatus).includes(status)) {
+    throw new CustomError("Invalid movie status", 400);
+  }
+  // Update status for multiple movies
+  const result = await prisma.movie.updateMany({
+    where: { id: { in: movieIds } },
+    data: { status },
+  });
+
+  logger.info("Movie statuses updated", {
+    updatedCount: result.count,
+    newStatus: status,
+  });
+
+  return {
+    message: `Updated ${result.count} movie(s) to status "${status}" successfully`,
+  };
 };
