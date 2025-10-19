@@ -10,8 +10,8 @@ type Seat = {
 };
 
 export const getRooms = async ({
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   search = "",
   isActive,
   startTime,
@@ -48,14 +48,19 @@ export const getRooms = async ({
       },
       ...(isActive && { isActive }),
       ...(cinemaId && { cinemaId }),
-      ...(startTime && endTime && {
-        id: {
-          notIn: response?.data?.data || [],
-        },
-      }),
+      ...(startTime &&
+        endTime && {
+          id: {
+            notIn: response?.data?.data || [],
+          },
+        }),
     },
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
   // Count total items for pagination
   const totalItems = await prisma.room.count({
@@ -66,17 +71,18 @@ export const getRooms = async ({
       },
       ...(isActive && { isActive }),
       ...(cinemaId && { cinemaId }),
-      ...(startTime && endTime && {
-        id: {
-          notIn: response?.data?.data || [],
-        },
-      }),
+      ...(startTime &&
+        endTime && {
+          id: {
+            notIn: response?.data?.data || [],
+          },
+        }),
     },
   });
   return {
     rooms,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 

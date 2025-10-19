@@ -9,8 +9,8 @@ import {
 } from "../utils/cloudinary.js";
 
 export const getUsers = async ({
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   search = "",
   role,
   isActive,
@@ -32,9 +32,14 @@ export const getUsers = async ({
       ...(role && { role: role as Role }),
       ...(isActive && { isActive }),
     },
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
+
   const totalItems = await prisma.user.count({
     where: {
       ...(search && {
@@ -47,11 +52,12 @@ export const getUsers = async ({
       ...(isActive && { isActive }),
     },
   });
+
   logger.info("Fetched users", { users, totalItems, page, limit });
   return {
     users,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 

@@ -9,25 +9,25 @@ export const getMovies = asyncHandler(async (req: Request, res: Response) => {
   if (genreQuery) {
     genreIds = (genreQuery as string).split(",").map((id: string) => id.trim());
   }
-  const pageNumber = Number(page) || 1;
-  const limitNumber = Number(limit) || 10;
+
   const { movies, totalItems, totalPages } = await MovieService.getMovies({
-    page: pageNumber,
-    limit: limitNumber,
+    page: Number(page) || undefined,
+    limit: Number(limit) || undefined,
     search: search ? String(search) : "",
     genreIds: genreIds.length > 0 ? genreIds : undefined,
     rating: rating ? Number(rating) : undefined,
     isActive: isActive ? isActive === "true" : undefined,
     status: status ? String(status) : undefined,
   });
+
   res.status(200).json({
     pagination: {
       totalItems,
       totalPages,
-      currentPage: pageNumber,
-      pageSize: limitNumber < totalItems ? limitNumber : totalItems,
-      hasNextPage: pageNumber < totalPages,
-      hasPrevPage: pageNumber > 1,
+      currentPage: Number(page) || 1,
+      pageSize: Number(limit) || totalItems,
+      hasNextPage: Number(page) ? Number(page) < totalPages : false,
+      hasPrevPage: Number(page) ? Number(page) > 1 : false,
     },
     data: movies,
   });

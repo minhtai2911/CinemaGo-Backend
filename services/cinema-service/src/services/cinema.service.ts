@@ -3,8 +3,8 @@ import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
 
 export const getCinemas = async ({
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   search = "",
   isActive,
 }: {
@@ -19,8 +19,12 @@ export const getCinemas = async ({
       name: { contains: search, mode: "insensitive" },
       ...(isActive && { isActive }),
     },
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
   // Count total items for pagination
   const totalItems = await prisma.cinema.count({
@@ -29,11 +33,12 @@ export const getCinemas = async ({
       ...(isActive && { isActive }),
     },
   });
+
   logger.info("Fetched cinemas", { cinemas, totalItems, page, limit });
   return {
     cinemas,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 
