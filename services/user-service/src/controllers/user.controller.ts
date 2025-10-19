@@ -5,23 +5,23 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, search, role, isActive } = req.query;
-  const pageNumber = Number(page) || 1;
-  const limitNumber = Number(limit) || 10;
+
   const { users, totalItems, totalPages } = await UserService.getUsers({
-    page: pageNumber,
-    limit: limitNumber,
+    page: Number(page) || undefined,
+    limit: Number(limit) || undefined,
     search: search ? String(search) : "",
     role: role ? String(role) : undefined,
     isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
+
   res.status(200).json({
     pagination: {
       totalItems,
       totalPages,
-      currentPage: pageNumber,
-      pageSize: limitNumber < totalItems ? limitNumber : totalItems,
-      hasNextPage: pageNumber < totalPages,
-      hasPrevPage: pageNumber > 1,
+      currentPage: page ? Number(page) : 1,
+      pageSize: limit ? Number(limit) : totalItems,
+      hasNextPage: page ? Number(page) < totalPages : false,
+      hasPrevPage: page ? Number(page) > 1 : false,
     },
     data: users,
   });

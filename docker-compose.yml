@@ -97,6 +97,14 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+  fooddrink-service:
+    build:
+      context: ./services/fooddrink-service
+      dockerfile: Dockerfile
+    env_file: ./services/fooddrink-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis:alpine
