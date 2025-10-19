@@ -1,7 +1,7 @@
 import logger from "../utils/logger.js";
 import { CustomError } from "../utils/customError.js";
 import prisma from "../config/db.js";
-import { FoodDrinkType } from "generated/prisma/index.js";
+import { FoodDrinkType } from "../../generated/prisma/index.js";
 import {
   uploadImageToCloudinary,
   deleteImageFromCloudinary,
