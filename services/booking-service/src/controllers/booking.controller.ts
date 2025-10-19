@@ -44,20 +44,24 @@ export const createBooking = asyncHandler(
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
     if (req.user?.role !== "USER") {
       userId = undefined; // For ADMIN or EMPLOYEE, set userId to undefined to allow booking on behalf of users
     }
+
     const { showtimeId, seatIds, foodDrinks } = req.body;
-    if (!showtimeId || !seatIds || !Array.isArray(seatIds)) {
+    if (!showtimeId) {
       return res.status(400).json({ message: "Invalid booking data" });
     }
+
     const booking = await bookingService.createBooking(
       req.redisClient,
       userId,
       showtimeId,
-      seatIds,
-      foodDrinks
+      seatIds || [],
+      foodDrinks || []
     );
+
     res.status(201).json({ data: booking });
   }
 );

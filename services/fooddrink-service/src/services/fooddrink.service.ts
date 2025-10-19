@@ -93,14 +93,18 @@ export const createFoodDrink = async (
   try {
     // Upload image to Cloudinary
     const uploadResult = await uploadImageToCloudinary(image);
+
+    if (!uploadResult) {
+      throw new CustomError("Image upload failed", 500);
+    }
     // Create a new food or drink item in the database
     const newFoodDrink = await prisma.foodDrink.create({
       data: {
         name,
         description,
         price,
-        image: uploadResult?.secure_url || "",
-        publicId: uploadResult?.public_id || "",
+        image: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
         type,
       },
     });
