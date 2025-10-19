@@ -10,21 +10,20 @@ export const getBookingsByUserId = asyncHandler(
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 10;
+
     const data = await bookingService.getBookingsByUserId({
       userId,
-      page: pageNumber,
-      limit: limitNumber,
+      page: Number(page) || undefined,
+      limit: Number(limit) || undefined,
     });
     res.status(200).json({
       pagination: {
         totalItems: data.totalItems,
         totalPages: data.totalPages,
-        currentPage: pageNumber,
-        pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
-        hasNextPage: pageNumber < data.totalPages,
-        hasPrevPage: pageNumber > 1,
+        currentPage: Number(page) || 1,
+        pageSize: Number(limit) || data.totalItems,
+        hasNextPage: Number(page) ? Number(page) < data.totalPages : false,
+        hasPrevPage: Number(page) ? Number(page) > 1 : false,
       },
       data: data.bookings,
     });
@@ -48,7 +47,7 @@ export const createBooking = asyncHandler(
     if (req.user?.role !== "USER") {
       userId = undefined; // For ADMIN or EMPLOYEE, set userId to undefined to allow booking on behalf of users
     }
-    const { showtimeId, seatIds } = req.body;
+    const { showtimeId, seatIds, foodDrinks } = req.body;
     if (!showtimeId || !seatIds || !Array.isArray(seatIds)) {
       return res.status(400).json({ message: "Invalid booking data" });
     }
@@ -56,7 +55,8 @@ export const createBooking = asyncHandler(
       req.redisClient,
       userId,
       showtimeId,
-      seatIds
+      seatIds,
+      foodDrinks
     );
     res.status(201).json({ data: booking });
   }

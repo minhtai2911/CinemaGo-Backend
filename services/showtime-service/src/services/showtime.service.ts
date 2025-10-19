@@ -4,8 +4,8 @@ import logger from "../utils/logger.js";
 import axios from "axios";
 
 export const getShowtimes = async ({
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   movieId,
   cinemaId,
   isActive,
@@ -37,10 +37,15 @@ export const getShowtimes = async ({
       lte: endTime,
     };
   }
+
   const showtimes = await prisma.showtime.findMany({
     where,
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
   // Count total items for pagination
   const totalItems = await prisma.showtime.count({ where });
@@ -49,7 +54,7 @@ export const getShowtimes = async ({
   return {
     showtimes,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 
@@ -63,6 +68,7 @@ export const getShowtimeById = async (showtimeId: string) => {
     logger.warn("Showtime not found", { showtimeId });
     throw new CustomError("Showtime not found", 404);
   }
+
   logger.info("Fetched showtime", { showtime });
   return showtime;
 };
@@ -85,6 +91,7 @@ export const createShowtime = async (
       endTime: { gt: startTime },
     },
   });
+
   if (existingShowtime) {
     logger.warn("Showtime conflict", { existingShowtime });
     throw new CustomError("Showtime conflict", 409);
@@ -117,6 +124,7 @@ export const createShowtime = async (
       format,
     },
   });
+
   logger.info("Created showtime", { showtime });
   return showtime;
 };
@@ -182,6 +190,7 @@ export const updateShowtimeById = async (
     where: { id: showtimeId },
     data: updateShowtime,
   });
+
   logger.info("Updated showtime", { showtime });
   return showtime;
 };
@@ -192,10 +201,12 @@ export const archiveShowtimeById = async (showtimeId: string) => {
     where: { id: showtimeId },
     data: { isActive: false },
   });
+
   if (!showtime) {
     logger.warn("Showtime not found for archiving", { showtimeId });
     throw new CustomError("Showtime not found", 404);
   }
+
   logger.info("Archived showtime", { showtime });
   return { message: "Showtime archived successfully" };
 };
@@ -206,10 +217,12 @@ export const restoreShowtimeById = async (showtimeId: string) => {
     where: { id: showtimeId },
     data: { isActive: true },
   });
+
   if (!showtime) {
     logger.warn("Showtime not found for restoring", { showtimeId });
     throw new CustomError("Showtime not found", 404);
   }
+
   logger.info("Restored showtime", { showtime });
   return { message: "Showtime restored successfully" };
 };

@@ -15,13 +15,14 @@ datasource db {
 }
 
 model Booking {
-  id           String        @id @default(uuid())
-  userId       String?
-  showtimeId   String
-  totalPrice   Int
-  bookingSeats BookingSeat[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                String             @id @default(uuid())
+  userId            String?
+  showtimeId        String
+  totalPrice        Int
+  bookingSeats      BookingSeat[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  bookingFoodDrinks BookingFoodDrink[]
 
   @@index([userId], name: "idx_booking_user_id")
   @@index([showtimeId], name: "idx_booking_showtime_id")
@@ -41,4 +42,20 @@ model BookingSeat {
   @@index([bookingId], name: "idx_booking_seat_booking_id")
   @@index([seatId], name: "idx_booking_seat_seat_id")
   @@map("booking_seats")
+}
+
+model BookingFoodDrink {
+  id          String   @id @default(uuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  foodDrinkId String
+  quantity    Int
+  totalPrice  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([bookingId, foodDrinkId], name: "uniq_booking_food_drink")
+  @@index([bookingId], name: "idx_booking_food_booking_id")
+  @@index([foodDrinkId], name: "idx_booking_food_food_drink_id")
+  @@map("booking_food_drinks")
 }

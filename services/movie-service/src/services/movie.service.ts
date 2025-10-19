@@ -10,8 +10,8 @@ import prisma from "../config/db.js";
 import { MovieStatus } from "../../generated/prisma/index.js";
 
 export const getMovies = async ({
-  page = 1,
-  limit = 10,
+  page,
+  limit,
   search = "",
   isActive,
   genreIds,
@@ -58,8 +58,12 @@ export const getMovies = async ({
       },
     },
     orderBy: { createdAt: "desc" },
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
   // Count total items for pagination
   const totalItems = await prisma.movie.count({ where });
@@ -68,7 +72,7 @@ export const getMovies = async ({
   return {
     movies,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 

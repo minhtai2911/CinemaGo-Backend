@@ -353,6 +353,29 @@ app.use(
   })
 );
 
+app.use(
+  "/v1/food-drinks",
+  verifyToken,
+  proxy(process.env.FOOD_DRINK_SERVICE_URL as string, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts: any, srcReq: AuthenticatedRequest) => {
+      proxyReqOpts.headers ||= {};
+
+      const headers = proxyReqOpts.headers as OutgoingHttpHeaders;
+
+      if (srcReq.user?.userId) {
+        headers["x-user-id"] = srcReq.user.userId;
+        headers["x-user-role"] = srcReq.user.role;
+      }
+
+      return {
+        ...proxyReqOpts,
+        headers,
+      };
+    },
+  })
+);
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {

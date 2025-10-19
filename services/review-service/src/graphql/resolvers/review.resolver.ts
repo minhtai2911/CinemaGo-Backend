@@ -28,34 +28,33 @@ export const reviewResolver = {
         isActive?: boolean;
       }
     ) => {
-      const pageNumber = Number(page) || 1;
-      const limitNumber = Number(limit) || 10;
+      const pageNumber = Number(page) || undefined;
+      const limitNumber = Number(limit) || undefined;
+
+      const query: any = {
+        ...(movieId && { movieId }),
+        ...(rating && {
+          rating: { $gte: Number(rating), $lt: Number(rating) + 1 },
+        }),
+        ...(userId && { userId }),
+        ...(type && { type }),
+        ...(status && { status }),
+        ...(isActive && { isActive }),
+      };
+
+      let mongooseQuery = Review.find(query).sort({ createdAt: -1 });
+
+      if (pageNumber && limitNumber) {
+        mongooseQuery = mongooseQuery
+          .skip((pageNumber - 1) * limitNumber)
+          .limit(limitNumber);
+      }
       // Find reviews by movieId and optional rating
-      const reviews = await Review.find({
-        ...(movieId && { movieId }),
-        ...(rating && {
-          rating: { $gte: rating, $lt: rating + 1 },
-        }),
-        ...(userId && { userId }),
-        ...(type && { type }),
-        ...(status && { status }),
-        ...(isActive && { isActive }),
-      })
-        .skip((pageNumber - 1) * limitNumber)
-        .limit(limitNumber);
+      const reviews = await mongooseQuery;
       // Count total reviews for pagination
-      const totalItems = await Review.countDocuments({
-        ...(movieId && { movieId }),
-        ...(rating && {
-          rating: { $gte: rating, $lt: rating + 1 },
-        }),
-        ...(userId && { userId }),
-        ...(type && { type }),
-        ...(status && { status }),
-        ...(isActive && { isActive }),
-      });
+      const totalItems = await Review.countDocuments(query);
       // Calculate total pages
-      const totalPages = Math.ceil(totalItems / limitNumber);
+      const totalPages = limitNumber ? Math.ceil(totalItems / limitNumber) : 1;
       logger.info(
         `Fetched ${reviews.length} reviews for page ${pageNumber} with limit ${limitNumber}`
       );
@@ -65,9 +64,9 @@ export const reviewResolver = {
           totalItems,
           totalPages,
           currentPage: pageNumber,
-          pageSize: limitNumber < totalItems ? limitNumber : totalItems,
-          hasNextPage: pageNumber < totalPages,
-          hasPrevPage: pageNumber > 1,
+          pageSize: limitNumber || totalItems,
+          hasNextPage: pageNumber ? pageNumber < totalPages : false,
+          hasPrevPage: pageNumber ? pageNumber > 1 : false,
         },
         data: reviews,
       };

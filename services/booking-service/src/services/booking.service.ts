@@ -5,8 +5,8 @@ import axios from "axios";
 
 export const getBookingsByUserId = async ({
   userId,
-  page = 1,
-  limit = 10,
+  page,
+  limit,
 }: {
   userId: string;
   page?: number;
@@ -19,9 +19,14 @@ export const getBookingsByUserId = async ({
     },
     include: {
       bookingSeats: true,
+      bookingFoodDrinks: true,
     },
-    skip: (page - 1) * limit,
-    take: limit,
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
   });
   // Count total bookings for pagination
   const totalItems = await prisma.booking.count({
@@ -29,6 +34,7 @@ export const getBookingsByUserId = async ({
       userId,
     },
   });
+
   logger.info("Fetched bookings for user", {
     userId,
     bookings,
@@ -39,7 +45,7 @@ export const getBookingsByUserId = async ({
   return {
     bookings,
     totalItems,
-    totalPages: Math.ceil(totalItems / limit),
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
 
@@ -49,6 +55,7 @@ export const getBookingById = async (bookingId: string) => {
     where: { id: bookingId },
     include: {
       bookingSeats: true,
+      bookingFoodDrinks: true,
     },
   });
   // If booking not found, throw a custom error
@@ -56,6 +63,7 @@ export const getBookingById = async (bookingId: string) => {
     logger.warn("Booking not found", { bookingId });
     throw new CustomError("Booking not found", 404);
   }
+
   logger.info("Fetched booking", { booking });
   return booking;
 };
@@ -64,7 +72,8 @@ export const createBooking = async (
   redisClient: any,
   userId: string | undefined,
   showtimeId: string,
-  seatIds: string[]
+  seatIds: string[],
+  foodDrinks: { foodDrinkId: string; quantity: number }[]
 ) => {
   let totalPrice: number = 0;
   for (const seatId of seatIds) {
@@ -97,6 +106,42 @@ export const createBooking = async (
     // Calculate the total price for the booking
     totalPrice += holder.extraPrice + showtime.data.data.price;
   }
+  // Fetch food and drink details from the fooddrink service
+  let bookingFoodDrinksData: {
+    foodDrinkId: string;
+    quantity: number;
+    totalPrice: number;
+  }[] = [];
+  if (foodDrinks.length > 0) {
+    const foodDrinkIds = foodDrinks.map((f) => f.foodDrinkId);
+
+    const response = await axios.post(
+      `${process.env.FOOD_DRINK_SERVICE_URL}/api/food_drinks/public/by-ids`,
+      { ids: foodDrinkIds }
+    );
+
+    const foodDrinkList = response?.data?.data || [];
+
+    bookingFoodDrinksData = foodDrinks.map((item) => {
+      const foodInfo = foodDrinkList.find(
+        (foodDrink: { id: string; price: number }) =>
+          foodDrink.id === item.foodDrinkId
+      );
+
+      if (!foodInfo) {
+        throw new CustomError(`FoodDrink ${item.foodDrinkId} not found`, 404);
+      }
+
+      const totalFoodPrice = foodInfo.price * item.quantity;
+      totalPrice += totalFoodPrice;
+
+      return {
+        foodDrinkId: item.foodDrinkId,
+        quantity: item.quantity,
+        totalPrice: totalFoodPrice,
+      };
+    });
+  }
   // Transaction to create a booking and delete held seats from Redis
   const result = await prisma.$transaction(async (tx: any) => {
     // Create a new booking
@@ -105,15 +150,29 @@ export const createBooking = async (
         userId,
         showtimeId,
         totalPrice,
-        bookingSeats: {
-          create: seatIds.map((seatId) => ({
-            seatId,
-            showtimeId,
-          })),
-        },
+        bookingSeats:
+          seatIds.length > 0
+            ? {
+                create: seatIds.map((seatId) => ({
+                  seatId,
+                  showtimeId,
+                })),
+              }
+            : undefined,
+        bookingFoodDrinks:
+          bookingFoodDrinksData.length > 0
+            ? {
+                create: bookingFoodDrinksData.map((item) => ({
+                  foodDrinkId: item.foodDrinkId,
+                  quantity: item.quantity,
+                  totalPrice: item.totalPrice,
+                })),
+              }
+            : undefined,
       },
       include: {
         bookingSeats: true,
+        bookingFoodDrinks: true,
       },
     });
     // Delete the held seats from Redis
@@ -121,6 +180,7 @@ export const createBooking = async (
       redisClient.del(`hold:${showtimeId}:${seatId}`)
     );
     await Promise.all(deletePromises);
+
     return booking;
   });
 
