@@ -116,7 +116,7 @@ export const createBooking = async (
     const foodDrinkIds = foodDrinks.map((f) => f.foodDrinkId);
 
     const response = await axios.post(
-      `${process.env.FOOD_DRINK_SERVICE_URL}/api/food_drinks/public/by-ids`,
+      `${process.env.FOOD_DRINK_SERVICE_URL}/api/food-drinks/public/by-ids`,
       { ids: foodDrinkIds }
     );
 
