@@ -99,7 +99,13 @@ export const getRoomById = async (roomId: string) => {
     logger.warn("Room not found", { roomId });
     throw new CustomError("Room not found", 404);
   }
-  return room;
+
+  const seatTypePriceMap: { [key: string]: number } = {};
+  room.seats.forEach((seat) => {
+    seatTypePriceMap[seat.seatType] = seat.extraPrice;
+  });
+
+  return { ...room, ...seatTypePriceMap };
 };
 
 export const createRoom = async (
