@@ -4,7 +4,8 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getRooms = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, isActive, startTime, endTime } = req.query;
+  const { page, limit, search, isActive, startTime, endTime, cinemaId } =
+    req.query;
 
   const data = await roomService.getRooms({
     page: Number(page) || undefined,
@@ -13,6 +14,7 @@ export const getRooms = asyncHandler(async (req: Request, res: Response) => {
     isActive: isActive !== undefined ? isActive === "true" : undefined,
     startTime: startTime ? new Date(startTime as string) : undefined,
     endTime: endTime ? new Date(endTime as string) : undefined,
+    cinemaId: cinemaId ? String(cinemaId) : undefined,
   });
 
   res.status(200).json({
