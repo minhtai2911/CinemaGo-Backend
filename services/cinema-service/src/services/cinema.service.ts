@@ -144,3 +144,25 @@ export const restoreCinemaById = async (cinemaId: string) => {
   logger.info("Restored cinema", { restoredCinema });
   return { message: "Cinema restored successfully" };
 };
+
+export const getTotalCinemasCount = async () => {
+  // Count total cinemas
+  const totalCinemas = await prisma.cinema.count();
+
+  logger.info("Total cinemas count fetched", { totalCinemas });
+
+  return totalCinemas;
+};
+
+export const getCinemasByIds = async (cinemaIds: string[]) => {
+  // Fetch cinemas by a list of IDs
+  const cinemas = await prisma.cinema.findMany({
+    where: {
+      id: { in: cinemaIds },
+    },
+  });
+
+  logger.info("Fetched cinemas by IDs", { cinemaIds, count: cinemas.length });
+
+  return cinemas;
+};

@@ -203,3 +203,173 @@ export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   });
   return bookingSeats;
 };
+
+export const getRevenueByPeriod = async (startDate?: Date, endDate?: Date) => {
+  // Calculate total revenue within a specific date range
+  const revenueData = await prisma.booking.aggregate({
+    where: {
+      ...(startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {}),
+    },
+    _sum: {
+      totalPrice: true,
+    },
+  });
+
+  const revenueDataFromFoodDrink = await prisma.bookingFoodDrink.aggregate({
+    where: {
+      booking: {
+        ...(startDate && endDate
+          ? { createdAt: { gte: startDate, lte: endDate } }
+          : {}),
+      },
+    },
+    _sum: {
+      totalPrice: true,
+    },
+  });
+
+  const totalRevenueFromFoodDrink =
+    revenueDataFromFoodDrink._sum.totalPrice || 0;
+  const totalRevenue = revenueData._sum.totalPrice || 0;
+
+  logger.info("Calculated revenue for period", {
+    startDate,
+    endDate,
+    totalRevenue,
+    totalRevenueFromFoodDrink,
+  });
+
+  return { totalRevenue, totalRevenueFromFoodDrink };
+};
+
+export const getRevenueByPeriodAndCinema = async (
+  startDate?: Date,
+  endDate?: Date
+) => {
+  // Calculate total revenue for a specific cinema within a date range
+  const bookings = await prisma.booking.findMany({
+    where: {
+      ...(startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {}),
+    },
+    select: { showtimeId: true, totalPrice: true },
+  });
+
+  if (bookings.length === 0) {
+    return [];
+  }
+
+  const showtimeIds = [...new Set(bookings.map((b) => b.showtimeId))];
+
+  const { data: showtimes } = await axios.post(
+    `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
+    { showtimeIds }
+  );
+
+  const revenueMap: Record<string, number> = {};
+  for (const booking of bookings) {
+    const showtime = showtimes.find(
+      (showtime: { id: string }) => showtime.id === booking.showtimeId
+    );
+
+    if (!showtime) {
+      continue;
+    }
+
+    const cinemaId = showtime.cinemaId;
+    revenueMap[cinemaId] = (revenueMap[cinemaId] || 0) + booking.totalPrice;
+  }
+
+  const { data: cinemas } = await axios.post(
+    `${process.env.CINEMA_SERVICE_URL}/api/cinemas/public/batch`,
+    { cinemaIds: Object.keys(revenueMap) }
+  );
+
+  const cinemasRevenue = Object.entries(revenueMap).map(
+    ([cinemaId, totalRevenue]) => {
+      const cinema = cinemas.find(
+        (cinema: { id: string }) => cinema.id === cinemaId
+      );
+
+      return {
+        cinemaId,
+        cinemaName: cinema?.name || "Unknown",
+        totalRevenue,
+      };
+    }
+  );
+
+  const sortedCinemas = cinemasRevenue.sort(
+    (a, b) => b.totalRevenue - a.totalRevenue
+  );
+
+  return { sortedCinemas, cinemasRevenue };
+};
+
+export const getRevenueByPeriodAndMovie = async (
+  startDate?: Date,
+  endDate?: Date
+) => {
+  // Calculate total revenue for a specific cinema within a date range
+  const bookings = await prisma.booking.findMany({
+    where: {
+      ...(startDate && endDate
+        ? { createdAt: { gte: startDate, lte: endDate } }
+        : {}),
+    },
+    select: { showtimeId: true, totalPrice: true },
+  });
+
+  if (bookings.length === 0) {
+    return [];
+  }
+
+  const showtimeIds = [...new Set(bookings.map((b) => b.showtimeId))];
+
+  const { data: showtimes } = await axios.post(
+    `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
+    { showtimeIds }
+  );
+
+  const revenueMap: Record<string, number> = {};
+  for (const booking of bookings) {
+    const showtime = showtimes.find(
+      (showtime: { id: string }) => showtime.id === booking.showtimeId
+    );
+
+    if (!showtime) {
+      continue;
+    }
+
+    const movieId = showtime.movieId;
+    revenueMap[movieId] = (revenueMap[movieId] || 0) + booking.totalPrice;
+  }
+
+  const { data: movies } = await axios.post(
+    `${process.env.MOVIE_SERVICE_URL}/api/movies/public/batch`,
+    { movieIds: Object.keys(revenueMap) }
+  );
+
+  const moviesRevenue = Object.entries(revenueMap).map(
+    ([movieId, totalRevenue]) => {
+      const movie = movies.find(
+        (movie: { id: string }) => movie.id === movieId
+      );
+
+      return {
+        movieId,
+        movieName: movie?.name || "Unknown",
+        totalRevenue,
+      };
+    }
+  );
+
+  const sortedMovies = moviesRevenue.sort(
+    (a, b) => b.totalRevenue - a.totalRevenue
+  );
+
+  return { sortedMovies, moviesRevenue };
+};

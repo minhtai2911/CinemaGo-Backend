@@ -42,5 +42,12 @@ router.put(
   authorizeRole("ADMIN"),
   MovieController.restoreMovieById
 );
+router.get(
+  "/dashboard/total-count",
+  authenticateRequest,
+  authorizeRole("ADMIN"),
+  MovieController.getTotalMoviesCount
+);
+router.post("/public/batch", MovieController.getMoviesByIds);
 
 export default router;

@@ -337,3 +337,24 @@ export const updateMovieStatusByIds = async (
     message: `Updated ${result.count} movie(s) to status "${status}" successfully`,
   };
 };
+
+export const getTotalMoviesCount = async () => {
+  // Get total count of movies
+  const count = await prisma.movie.count();
+
+  logger.info("Total movies count fetched", { count });
+
+  return count;
+};
+
+export const getMoviesByIds = async (movieIds: string[]) => {
+  // Fetch movies by a list of IDs
+  const movies = await prisma.movie.findMany({
+    where: {
+      id: { in: movieIds },
+    },
+  });
+
+  logger.info("Fetched movies by IDs", { movieIds, count: movies.length });
+  return movies;
+};

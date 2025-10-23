@@ -51,5 +51,11 @@ router.put(
   authorizeRole("ADMIN"),
   UserController.restoreUserById
 );
+router.get(
+  "/dashboard/total-count",
+  authenticateRequest,
+  authorizeRole("ADMIN"),
+  UserController.getTotalUsersCount
+);
 
 export default router;

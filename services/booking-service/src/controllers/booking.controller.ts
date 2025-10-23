@@ -76,3 +76,43 @@ export const getBookingSeatsByShowtimeId = asyncHandler(
     res.status(200).json({ data: seats });
   }
 );
+
+export const getRevenueByPeriod = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+
+    const revenue = await bookingService.getRevenueByPeriod(start, end);
+    res.status(200).json({ data: revenue });
+  }
+);
+
+export const getRevenueByPeriodAndCinema = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+
+    const revenue = await bookingService.getRevenueByPeriodAndCinema(
+      start,
+      end
+    );
+    res.status(200).json({ data: revenue });
+  }
+);
+
+export const getRevenueByPeriodAndMovie = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { startDate, endDate } = req.query;
+
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+
+    const revenue = await bookingService.getRevenueByPeriodAndMovie(start, end);
+
+    res.status(200).json({ data: revenue });
+  }
+);

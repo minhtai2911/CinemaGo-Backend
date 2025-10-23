@@ -116,3 +116,15 @@ export const updateProfile = asyncHandler(
       .json({ data: user, message: "Profile updated successfully" });
   }
 );
+
+export const getTotalUsersCount = asyncHandler(
+  async (req: Request, res: Response) => {
+    const count = await UserService.getTotalUsersCount();
+
+    res.status(200).json({
+      data: {
+        totalUsers: count,
+      },
+    });
+  }
+);

@@ -206,3 +206,12 @@ export const updateProfile = async (
   logger.info("Updated user profile", { userId, updatedUser });
   return updatedUser;
 };
+
+export const getTotalUsersCount = async () => {
+  // Get total count of users
+  const count = await prisma.user.count();
+
+  logger.info("Total users count fetched", { count });
+
+  return count;
+};
