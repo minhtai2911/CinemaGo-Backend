@@ -80,3 +80,31 @@ export const restoreCinemaById = asyncHandler(
     res.status(200).json(message);
   }
 );
+
+export const getTotalCinemasCount = asyncHandler(
+  async (req: Request, res: Response) => {
+    const count = await cinemaService.getTotalCinemasCount();
+
+    res.status(200).json({
+      data: {
+        totalCinemas: count,
+      },
+    });
+  }
+);
+
+export const getCinemasByIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { cinemaIds } = req.body;
+
+    if (!cinemaIds || !Array.isArray(cinemaIds) || cinemaIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "cinemaIds must be a non-empty array" });
+    }
+
+    const cinemas = await cinemaService.getCinemasByIds(cinemaIds);
+
+    res.status(200).json({ data: cinemas });
+  }
+);

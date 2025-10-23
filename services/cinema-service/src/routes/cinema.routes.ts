@@ -1,6 +1,9 @@
 import express from "express";
 import * as cinemaController from "../controllers/cinema.controller.js";
-import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
+import {
+  authenticateRequest,
+  authorizeRole,
+} from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -30,5 +33,12 @@ router.put(
   authorizeRole("ADMIN"),
   cinemaController.restoreCinemaById
 );
+router.get(
+  "/dashboard/total-count",
+  authenticateRequest,
+  authorizeRole("ADMIN"),
+  cinemaController.getTotalCinemasCount
+);
+router.post("/public/batch", cinemaController.getCinemasByIds);
 
 export default router;

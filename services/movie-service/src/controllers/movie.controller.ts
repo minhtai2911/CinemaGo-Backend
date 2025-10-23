@@ -166,3 +166,31 @@ export const updateMovieStatusByIds = asyncHandler(
     res.status(200).json(message);
   }
 );
+
+export const getTotalMoviesCount = asyncHandler(
+  async (req: Request, res: Response) => {
+    const count = await MovieService.getTotalMoviesCount();
+
+    res.status(200).json({
+      data: {
+        totalMovies: count,
+      },
+    });
+  }
+);
+
+export const getMoviesByIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { movieIds } = req.body;
+
+    if (!movieIds || !Array.isArray(movieIds) || movieIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "movieIds must be a non-empty array" });
+    }
+
+    const movies = await MovieService.getMoviesByIds(movieIds);
+
+    res.status(200).json({ data: movies });
+  }
+);
