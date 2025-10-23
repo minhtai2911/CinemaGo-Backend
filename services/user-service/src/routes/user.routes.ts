@@ -54,6 +54,7 @@ router.put(
 router.get(
   "/dashboard/total-count",
   authenticateRequest,
+  authorizeRole("ADMIN"),
   UserController.getTotalUsersCount
 );
 

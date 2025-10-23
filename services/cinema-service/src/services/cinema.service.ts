@@ -151,7 +151,7 @@ export const getTotalCinemasCount = async () => {
 
   logger.info("Total cinemas count fetched", { totalCinemas });
 
-  return { totalCinemas };
+  return totalCinemas;
 };
 
 export const getCinemasByIds = async (cinemaIds: string[]) => {
@@ -162,7 +162,7 @@ export const getCinemasByIds = async (cinemaIds: string[]) => {
     },
   });
 
-  logger.info("Fetched cinemas by IDs", { cinemaIds, cinemas });
+  logger.info("Fetched cinemas by IDs", { cinemaIds, count: cinemas.length });
 
   return cinemas;
 };

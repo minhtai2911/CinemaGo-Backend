@@ -355,6 +355,6 @@ export const getMoviesByIds = async (movieIds: string[]) => {
     },
   });
 
-  logger.info("Fetched movies by IDs", { movieIds, movies });
+  logger.info("Fetched movies by IDs", { movieIds, count: movies.length });
   return movies;
 };

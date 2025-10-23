@@ -48,6 +48,6 @@ router.get(
   authorizeRole("ADMIN"),
   MovieController.getTotalMoviesCount
 );
-router.post("public/batch", MovieController.getMoviesByIds);
+router.post("/public/batch", MovieController.getMoviesByIds);
 
 export default router;

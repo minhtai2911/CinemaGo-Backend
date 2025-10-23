@@ -97,7 +97,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-        
+
   fooddrink-service:
     build:
       context: ./services/fooddrink-service
