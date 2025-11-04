@@ -188,7 +188,7 @@ export const forgotPassword = async (email: string) => {
       </span>
     </div>
 
-    <p>Mã OTP này sẽ hết hạn sau <strong>5 phút</strong>. Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.</p>
+    <p>Mã OTP này sẽ hết hạn sau <strong>3 phút</strong>. Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.</p>
 
     <p style="margin-top: 30px;">Trân trọng,<br><strong>CinemaGo Team</strong></p>
 
