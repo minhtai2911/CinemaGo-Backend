@@ -172,7 +172,7 @@ export const forgotPassword = async (email: string) => {
     data: {
       userId: user.id,
       otp: hashedOtp,
-      expiresAt: new Date(Date.now() + 60 * 1000), // OTP valid for 1 minute
+      expiresAt: new Date(Date.now() + 3 * 60 * 1000), // OTP valid for 3 minutes
     },
   });
   // Send OTP via email
