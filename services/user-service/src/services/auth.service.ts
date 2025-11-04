@@ -91,7 +91,7 @@ export const login = async (email: string, password: string) => {
   return { accessToken, refreshToken };
 };
 
-export const refreshAccessToken = async (userId: string, token: string) => {
+export const refreshAccessToken = async (token: string) => {
   // Validate input
   if (!token) {
     logger.warn("Refresh token is required");
@@ -99,7 +99,7 @@ export const refreshAccessToken = async (userId: string, token: string) => {
   }
   // Verify the refresh token
   const decoded = await prisma.refreshToken.findUnique({
-    where: { token, userId },
+    where: { token },
     select: {
       user: true,
       expiresAt: true,

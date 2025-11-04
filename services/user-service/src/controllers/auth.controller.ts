@@ -39,18 +39,16 @@ export const logout = asyncHandler(
 );
 
 export const refreshAccessToken = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: Request, res: Response) => {
     const { refreshToken } = req.body;
-    const userId = req.user?.userId;
+
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token is required" });
     }
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
 
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      await AuthService.refreshAccessToken(userId, refreshToken);
+      await AuthService.refreshAccessToken(refreshToken);
+
     res
       .status(200)
       .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });

@@ -24,6 +24,7 @@ export const verifyToken = (
     "/login",
     "/signup",
     "/forgot-password",
+    "/refresh-token",
     "/reset-password",
     "/send-verification-link",
     "/verify-account",
