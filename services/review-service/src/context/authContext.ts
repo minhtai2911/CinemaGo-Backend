@@ -8,6 +8,7 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
 export interface AuthenticatedUser {
   userId: string;
   role: string;
+  fullname: string;
   avatarUrl: string;
   publicId: string;
 }

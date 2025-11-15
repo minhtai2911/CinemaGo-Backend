@@ -19,6 +19,11 @@ export const reviewTypeDef = `#graphql
         createdAt: String!
     }
 
+    type UserDetail {
+        fullname: String!
+        avatarUrl: String
+    }
+
     type Review {
         id: ID!
         userId: String!
@@ -29,6 +34,7 @@ export const reviewTypeDef = `#graphql
         response: [Response!]
         isActive: Boolean!
         type: String!
+        userDetail: UserDetail
         createdAt: String!
         updatedAt: String!
     }
@@ -42,6 +48,7 @@ export const reviewTypeDef = `#graphql
             userId: String
             type: String
             status: String
+            isActive: Boolean
         ): PaginatedReviews!
 
         getReviewById(reviewId: String!): Review!

@@ -25,6 +25,16 @@ const reviewSchema = new mongoose.Schema(
     },
     response: [
       {
+        userDetail: {
+          fullname: {
+            type: String,
+            required: false,
+          },
+          avatarUrl: {
+            type: String,
+            required: false,
+          },
+        },
         userId: {
           type: String,
           required: true,
@@ -46,7 +56,26 @@ const reviewSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["Tiêu cực", "Tích cực", "Trung lập", "POSITIVE", "NEGATIVE", "NEUTRAL", "Không khả dụng", "UNAVAILABLE"],
+      enum: [
+        "Tiêu cực",
+        "Tích cực",
+        "Trung lập",
+        "POSITIVE",
+        "NEGATIVE",
+        "NEUTRAL",
+        "Không khả dụng",
+        "UNAVAILABLE",
+      ],
+    },
+    userDetail: {
+      fullname: {
+        type: String,
+        required: false,
+      },
+      avatarUrl: {
+        type: String,
+        required: false,
+      },
     },
   },
   { timestamps: true }

@@ -154,6 +154,10 @@ export const reviewResolver = {
         rating,
         content,
         type,
+        userDetail: {
+          fullname: context.user.fullname,
+          avatarUrl: context.user.avatarUrl,
+        },
       });
       return await review.save();
     },
@@ -182,6 +186,10 @@ export const reviewResolver = {
       }
       // Add response to review
       review.response.push({
+        userDetail: {
+          fullname: context.user.fullname,
+          avatarUrl: context.user.avatarUrl,
+        },
         userId: context.user?.userId,
         content,
         createdAt: new Date(),
