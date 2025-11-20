@@ -40,13 +40,16 @@ export const getBookingById = asyncHandler(
 
 export const createBooking = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    let userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+    let type = "online";
+
+    if (role !== "user") {
+      type = "offline";
     }
 
-    if (req.user?.role !== "USER") {
-      userId = undefined; // For ADMIN or EMPLOYEE, set userId to undefined to allow booking on behalf of users
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { showtimeId, seatIds, foodDrinks } = req.body;
@@ -59,7 +62,8 @@ export const createBooking = asyncHandler(
       userId,
       showtimeId,
       seatIds || [],
-      foodDrinks || []
+      foodDrinks || [],
+      type
     );
 
     res.status(201).json({ data: booking });
@@ -79,26 +83,32 @@ export const getBookingSeatsByShowtimeId = asyncHandler(
 
 export const getRevenueByPeriod = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, type } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
 
-    const revenue = await bookingService.getRevenueByPeriod(start, end);
+    const revenue = await bookingService.getRevenueByPeriod(
+      start,
+      end,
+      type as string | undefined
+    );
+
     res.status(200).json({ data: revenue });
   }
 );
 
 export const getRevenueByPeriodAndCinema = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, type } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
 
     const revenue = await bookingService.getRevenueByPeriodAndCinema(
       start,
-      end
+      end,
+      type as string | undefined
     );
     res.status(200).json({ data: revenue });
   }
@@ -106,12 +116,16 @@ export const getRevenueByPeriodAndCinema = asyncHandler(
 
 export const getRevenueByPeriodAndMovie = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, type } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
 
-    const revenue = await bookingService.getRevenueByPeriodAndMovie(start, end);
+    const revenue = await bookingService.getRevenueByPeriodAndMovie(
+      start,
+      end,
+      type as string | undefined
+    );
 
     res.status(200).json({ data: revenue });
   }

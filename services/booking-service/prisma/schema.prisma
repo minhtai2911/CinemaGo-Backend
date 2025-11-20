@@ -16,7 +16,8 @@ datasource db {
 
 model Booking {
   id                String             @id @default(uuid())
-  userId            String?
+  userId            String
+  type              String
   showtimeId        String
   totalPrice        Int
   bookingSeats      BookingSeat[]

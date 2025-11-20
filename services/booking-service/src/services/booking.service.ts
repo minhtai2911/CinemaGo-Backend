@@ -73,7 +73,8 @@ export const createBooking = async (
   userId: string | undefined,
   showtimeId: string,
   seatIds: string[],
-  foodDrinks: { foodDrinkId: string; quantity: number }[]
+  foodDrinks: { foodDrinkId: string; quantity: number }[],
+  type?: string
 ) => {
   let totalPrice: number = 0;
   for (const seatId of seatIds) {
@@ -169,6 +170,7 @@ export const createBooking = async (
                 })),
               }
             : undefined,
+        type,
       },
       include: {
         bookingSeats: true,
@@ -204,13 +206,18 @@ export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   return bookingSeats;
 };
 
-export const getRevenueByPeriod = async (startDate?: Date, endDate?: Date) => {
+export const getRevenueByPeriod = async (
+  startDate?: Date,
+  endDate?: Date,
+  type?: string
+) => {
   // Calculate total revenue within a specific date range
   const revenueData = await prisma.booking.aggregate({
     where: {
       ...(startDate && endDate
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
+      ...(type ? { type } : {}),
     },
     _sum: {
       totalPrice: true,
@@ -246,7 +253,8 @@ export const getRevenueByPeriod = async (startDate?: Date, endDate?: Date) => {
 
 export const getRevenueByPeriodAndCinema = async (
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
+  type?: string
 ) => {
   // Calculate total revenue for a specific cinema within a date range
   const bookings = await prisma.booking.findMany({
@@ -254,6 +262,7 @@ export const getRevenueByPeriodAndCinema = async (
       ...(startDate && endDate
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
+      ...(type ? { type } : {}),
     },
     select: { showtimeId: true, totalPrice: true },
   });
@@ -311,7 +320,8 @@ export const getRevenueByPeriodAndCinema = async (
 
 export const getRevenueByPeriodAndMovie = async (
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
+  type?: string
 ) => {
   // Calculate total revenue for a specific cinema within a date range
   const bookings = await prisma.booking.findMany({
@@ -319,6 +329,7 @@ export const getRevenueByPeriodAndMovie = async (
       ...(startDate && endDate
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
+      ...(type ? { type } : {}),
     },
     select: { showtimeId: true, totalPrice: true },
   });
