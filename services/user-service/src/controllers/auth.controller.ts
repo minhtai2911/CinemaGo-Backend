@@ -5,24 +5,31 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 import { userSocketMap } from "../server.js";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, device } = req.body;
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
   const { accessToken, refreshToken } = await AuthService.login(
     email,
-    password
+    password,
+    device
   );
   res.status(200).json({ accessToken, refreshToken });
 });
 
 export const signup = asyncHandler(async (req: Request, res: Response) => {
-  const { email, fullname, password, gender } = req.body;
+  const { email, fullname, password, gender, device } = req.body;
   if (!email || !fullname || !password || !gender) {
     return res.status(400).json({ message: "All fields are required" });
   }
   const user = await AuthService.signup(email, password, gender, fullname);
-  await AuthService.sendVerificationLink(email);
+
+  if (device === "mobile") {
+    await AuthService.sendVerifyOtp(email);
+  } else {
+    await AuthService.sendVerificationLink(email);
+  }
+
   res.status(201).json({ data: user, message: "User created successfully" });
 });
 
@@ -124,6 +131,20 @@ export const changePassword = asyncHandler(
       oldPassword,
       newPassword
     );
+    res.status(200).json(message);
+  }
+);
+
+export const verifyAccountByOtp = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const message = await AuthService.verifyAccountByOtp(email, otp);
+
     res.status(200).json(message);
   }
 );

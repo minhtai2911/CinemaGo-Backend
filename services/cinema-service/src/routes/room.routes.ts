@@ -39,5 +39,6 @@ router.get(
   authenticateRequest,
   RoomController.getHeldSeats
 );
+router.post("/release-seat", authenticateRequest, RoomController.releaseSeat);
 
 export default router;

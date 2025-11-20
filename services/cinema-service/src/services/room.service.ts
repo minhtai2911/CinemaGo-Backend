@@ -287,3 +287,29 @@ export const getHeldSeats = async (redisClient: any, showtimeId: string) => {
   logger.info("Fetched held seats", { showtimeId, holds });
   return holds;
 };
+
+export const releaseSeat = async (
+  redisClient: any,
+  userId: string,
+  showtimeId: string,
+  seatId: string
+) => {
+  const key = `hold:${showtimeId}:${seatId}`;
+
+  const holdData = await redisClient.get(key);
+
+  if (!holdData) {
+    throw new CustomError("Seat is not being held", 404);
+  }
+
+  const parsed = JSON.parse(holdData);
+
+  if (parsed.userId !== userId) {
+    throw new CustomError("You are not allowed to release this seat", 403);
+  }
+
+  await redisClient.del(key);
+
+  return { message: "Seat released successfully" };
+};
+

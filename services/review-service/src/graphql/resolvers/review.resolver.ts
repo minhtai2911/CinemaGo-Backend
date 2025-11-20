@@ -3,6 +3,8 @@ import axios from "axios";
 import logger from "../../utils/logger.js";
 import { CustomError } from "../../utils/customError.js";
 import { AuthenticatedUser } from "../../context/authContext.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const reviewResolver = {
   Query: {
@@ -71,6 +73,7 @@ export const reviewResolver = {
         data: reviews,
       };
     },
+
     getReviewById: async (_: any, { reviewId }: { reviewId: string }) => {
       // Check if reviewId is provided
       if (!reviewId) {
@@ -86,6 +89,42 @@ export const reviewResolver = {
       }
       logger.info(`Fetched review with ID: ${reviewId}`);
       return review;
+    },
+
+    getReviewOverview: async (_: any, { movieId }: { movieId: string }) => {
+      const movie = await axios
+        .get(`${process.env.MOVIE_SERVICE_URL}/api/movies/public/${movieId}`)
+        .then((res) => res.data)
+        .catch(() => null);
+
+      if (!movie) {
+        throw new CustomError("Movie not found", 404);
+      }
+
+      const reviews = await Review.find({ movieId, isActive: true });
+
+      const totalReviews = reviews.length;
+      const averageRating =
+        totalReviews > 0
+          ? (
+              reviews.reduce((sum, review) => sum + review.rating, 0) /
+              totalReviews
+            ).toFixed(1)
+          : "0.0";
+
+      const ratingDistribution = [0, 0, 0, 0, 0];
+      reviews.forEach((review) => {
+        const ratingIndex = Math.floor(review.rating) - 1;
+        if (ratingIndex >= 0 && ratingIndex < ratingDistribution.length) {
+          ratingDistribution[ratingIndex]++;
+        }
+      });
+
+      return {
+        totalReviews,
+        averageRating,
+        ratingDistribution,
+      };
     },
   },
 

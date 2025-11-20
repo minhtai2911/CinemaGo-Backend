@@ -39,6 +39,12 @@ export const reviewTypeDef = `#graphql
         updatedAt: String!
     }
 
+    type ReviewOverview {
+        averageRating: Float!
+        totalReviews: Int!
+        ratingDistribution: [Int!]
+    }
+
     type Query {
         getReviews(
             page: Int
@@ -52,6 +58,8 @@ export const reviewTypeDef = `#graphql
         ): PaginatedReviews!
 
         getReviewById(reviewId: String!): Review!
+
+        getReviewOverview(movieId: String!): ReviewOverview!
     }
 
     type Mutation {

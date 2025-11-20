@@ -50,7 +50,11 @@ export const signup = async (
   return user;
 };
 
-export const login = async (email: string, password: string) => {
+export const login = async (
+  email: string,
+  password: string,
+  device?: string
+) => {
   // Validate input
   if (!email || !password) {
     logger.warn("Email and password are required");
@@ -66,7 +70,11 @@ export const login = async (email: string, password: string) => {
   }
   // Check if user is active
   if (!user.isActive) {
-    await sendVerificationLink(email);
+    if (device === "mobile") {
+      await sendVerifyOtp(email);
+    } else {
+      await sendVerificationLink(email);
+    }
     logger.warn("User account is not active", { email });
     throw new CustomError("User account is not active", 400);
   }
@@ -408,4 +416,117 @@ export const changePassword = async (
   });
   logger.info("Password changed successfully", { userId });
   return { message: "Password changed successfully" };
+};
+
+export const sendVerifyOtp = async (email: string) => {
+  if (!email) {
+    logger.warn("Email is required to send OTP");
+    throw new CustomError("Email is required", 400);
+  }
+
+  // Check user tồn tại
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    logger.warn("User not found when sending verify OTP", { email });
+    throw new CustomError("User not found", 404);
+  }
+
+  // Nếu đã active rồi → không cần OTP nữa
+  if (user.isActive) {
+    logger.warn("User already verified", { email });
+    throw new CustomError("Account already verified", 400);
+  }
+
+  // Xóa OTP cũ
+  await prisma.oTP.deleteMany({
+    where: { userId: user.id },
+  });
+
+  // Generate OTP (6 digits)
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Hash otp
+  const hashedOtp = await bcrypt.hash(otp, 10);
+
+  // Tạo expiry time (3 phút)
+  const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
+
+  // Save OTP
+  await prisma.oTP.create({
+    data: {
+      userId: user.id,
+      otp: hashedOtp,
+      expiresAt,
+    },
+  });
+
+  // Gửi email
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 10px; padding: 30px; background-color: #fafafa;">
+      <h2 style="text-align: center; color: #2c3e50;">Xác thực Email</h2>
+      <p>Xin chào, ${user.fullname}</p>
+      <p>Bạn vừa yêu cầu xác thực email. Vui lòng sử dụng mã OTP bên dưới để tiếp tục:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="display: inline-block; font-size: 24px; letter-spacing: 4px; background: #2c3e50; color: #fff; padding: 12px 20px; border-radius: 8px;">
+          <strong>${otp}</strong>
+        </span>
+      </div>
+      <p>Mã OTP này sẽ hết hạn sau <strong>3 phút</strong>. Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.</p>
+      <p style="margin-top: 30px;">Trân trọng,<br><strong>CinemaGo Team</strong></p>
+    </div>
+  `;
+
+  await publishToQueue("email.send", {
+    from: `"CinemaGo" <${process.env.SMTP_USER}>`,
+    to: user.email,
+    subject: "Yêu cầu xác thực tài khoản từ CinemaGo",
+    html: htmlContent,
+  });
+
+  logger.info("Verification OTP sent successfully", { userId: user.id });
+
+  return { message: "OTP has been sent to your email" };
+};
+
+export const verifyAccountByOtp = async (email: string, otp: string) => {
+  if (!email || !otp) {
+    logger.warn("Email and OTP are required for account verification");
+    throw new CustomError("Email and OTP are required", 400);
+  }
+
+  // Find the user
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    logger.warn("User not found for OTP verification", { email });
+    throw new CustomError("User not found", 404);
+  }
+
+  // Verify the OTP
+  const isOtpValid = await verifyOtp(email, otp);
+
+  if (!isOtpValid) {
+    logger.warn("Invalid OTP for account verification", { email });
+    throw new CustomError("Invalid OTP", 400);
+  }
+
+  // Update the user's active status
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { isActive: true },
+  });
+
+  // Delete the OTP record
+  await prisma.oTP.deleteMany({
+    where: { userId: user.id },
+  });
+
+  logger.info("Account verified successfully via OTP", { userId: user.id });
+
+  return { message: "Account verified successfully" };
 };

@@ -17,5 +17,6 @@ router.post(
   authenticateRequest,
   AuthController.changePassword
 );
+router.post("/verify-otp", AuthController.verifyAccountByOtp);
 
 export default router;
