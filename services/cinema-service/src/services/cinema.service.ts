@@ -17,7 +17,7 @@ export const getCinemas = async ({
   const cinemas = await prisma.cinema.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
     ...(page && limit
       ? {
@@ -30,7 +30,7 @@ export const getCinemas = async ({
   const totalItems = await prisma.cinema.count({
     where: {
       name: { contains: search, mode: "insensitive" },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
   });
 

@@ -41,7 +41,7 @@ export const reviewResolver = {
         ...(userId && { userId }),
         ...(type && { type }),
         ...(status && { status }),
-        ...(isActive && { isActive }),
+        ...(isActive !== undefined ? { isActive } : {}),
       };
 
       let mongooseQuery = Review.find(query).sort({ createdAt: -1 });
@@ -160,7 +160,7 @@ export const reviewResolver = {
         movieId,
       });
       if (existingReview) {
-        throw new CustomError("You have already reviewed this movie", 400);
+        throw new CustomError("Bạn đã đánh giá phim này rồi.", 409);
       }
       // Predict sentiment for the review content
       let type: string;
@@ -187,18 +187,49 @@ export const reviewResolver = {
         logger.warn("Sentiment prediction failed", { error });
         type = "Không khả dụng";
       }
-      const review = new Review({
-        userId,
-        movieId,
-        rating,
-        content,
-        type,
-        userDetail: {
-          fullname: context.user.fullname,
-          avatarUrl: context.user.avatarUrl,
-        },
-      });
-      return await review.save();
+      try {
+        const totalReviews = await Review.countDocuments({ movieId });
+
+        const review = new Review({
+          userId,
+          movieId,
+          rating,
+          content,
+          type,
+          userDetail: {
+            fullname: context.user.fullname,
+            avatarUrl: context.user.avatarUrl,
+          },
+        });
+
+        await review.save();
+
+        await axios.post(
+          `${process.env.MOVIE_SERVICE_URL}/api/movies/calculate-movie-rating`,
+          {
+            movieId,
+            rating,
+            totalReviews,
+          }
+        );
+
+        logger.info("Review created and movie rating updated successfully", {
+          movieId,
+          reviewId: review._id,
+        });
+
+        return review;
+      } catch (error) {
+        logger.error("Failed to create review and update movie rating", {
+          error,
+          movieId,
+        });
+
+        throw new CustomError(
+          "Failed to create review and update movie rating",
+          500
+        );
+      }
     },
 
     replyToReview: async (

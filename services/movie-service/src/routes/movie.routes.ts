@@ -49,5 +49,7 @@ router.get(
   MovieController.getTotalMoviesCount
 );
 router.post("/public/batch", MovieController.getMoviesByIds);
+router.post("/calculate-movie-rating", MovieController.calculateMovieRating);
+router.get("/public/top-rated/:limit", MovieController.getTopRatedMovies);
 
 export default router;

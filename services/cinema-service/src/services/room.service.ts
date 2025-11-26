@@ -46,7 +46,7 @@ export const getRooms = async ({
         contains: search,
         mode: "insensitive",
       },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
       ...(cinemaId && { cinemaId }),
       ...(startTime &&
         endTime && {
@@ -69,7 +69,7 @@ export const getRooms = async ({
         contains: search,
         mode: "insensitive",
       },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
       ...(cinemaId && { cinemaId }),
       ...(startTime &&
         endTime && {
@@ -312,4 +312,3 @@ export const releaseSeat = async (
 
   return { message: "Seat released successfully" };
 };
-

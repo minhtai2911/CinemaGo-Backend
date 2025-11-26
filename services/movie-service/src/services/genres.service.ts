@@ -17,7 +17,7 @@ export const getGenres = async ({
   const genres = await prisma.genres.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
     ...(page && limit
       ? {
@@ -30,7 +30,7 @@ export const getGenres = async ({
   const totalItems = await prisma.genres.count({
     where: {
       name: { contains: search, mode: "insensitive" },
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
   });
 

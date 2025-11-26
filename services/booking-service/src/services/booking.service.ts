@@ -304,8 +304,7 @@ export const getRevenueByPeriodAndCinema = async (
       );
 
       return {
-        cinemaId,
-        cinemaName: cinema?.name || "Unknown",
+        cinema,
         totalRevenue,
       };
     }
@@ -371,8 +370,7 @@ export const getRevenueByPeriodAndMovie = async (
       );
 
       return {
-        movieId,
-        movieName: movie?.name || "Unknown",
+        movie,
         totalRevenue,
       };
     }
@@ -383,4 +381,52 @@ export const getRevenueByPeriodAndMovie = async (
   );
 
   return { sortedMovies, moviesRevenue };
+};
+
+export const getBookings = async ({
+  page,
+  limit,
+  showtimeId,
+  type,
+}: {
+  page?: number;
+  limit?: number;
+  showtimeId?: string;
+  type?: string;
+}) => {
+  // Fetch bookings with optional filters and pagination
+  const bookings = await prisma.booking.findMany({
+    where: {
+      ...(showtimeId ? { showtimeId } : {}),
+      ...(type ? { type } : {}),
+    },
+    include: {
+      bookingSeats: true,
+      bookingFoodDrinks: true,
+    },
+    ...(page && limit
+      ? {
+          skip: (page - 1) * limit,
+          take: limit,
+        }
+      : {}),
+  });
+  // Count total bookings for pagination
+  const totalItems = await prisma.booking.count({
+    where: {
+      ...(showtimeId ? { showtimeId } : {}),
+      ...(type ? { type } : {}),
+    },
+  });
+
+  logger.info("Fetched bookings", {
+    bookings,
+    totalItems,
+  });
+
+  return {
+    bookings,
+    totalItems,
+    totalPages: limit ? Math.ceil(totalItems / limit) : 1,
+  };
 };

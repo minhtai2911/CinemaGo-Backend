@@ -194,3 +194,29 @@ export const getMoviesByIds = asyncHandler(
     res.status(200).json({ data: movies });
   }
 );
+
+export const calculateMovieRating = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { rating, totalReviews, movieId } = req.body;
+
+    const message = await MovieService.calculateMovieRating(
+      movieId,
+      rating,
+      totalReviews
+    );
+
+    res.status(200).json(message);
+  }
+);
+
+export const getTopRatedMovies = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { limit } = req.query;
+
+    const topRatedMovies = await MovieService.getTopRatedMovies(
+      limit ? Number(limit) : 10
+    );
+
+    res.status(200).json({ data: topRatedMovies });
+  }
+);

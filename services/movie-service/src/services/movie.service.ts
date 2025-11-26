@@ -358,3 +358,52 @@ export const getMoviesByIds = async (movieIds: string[]) => {
   logger.info("Fetched movies by IDs", { movieIds, count: movies.length });
   return movies;
 };
+
+export const calculateMovieRating = async (
+  movieId: string,
+  rating: number,
+  totalReviews: number
+) => {
+  const movie = await prisma.movie.findUnique({
+    where: { id: movieId },
+  });
+
+  if (!movie) {
+    logger.warn("Movie not found for rating calculation", { movieId });
+    throw new CustomError("Movie not found", 404);
+  }
+
+  const newRating =
+    totalReviews === 0
+      ? rating
+      : (movie.rating * totalReviews + rating) / (totalReviews + 1);
+
+  await prisma.movie.update({
+    where: { id: movieId },
+    data: { rating: newRating },
+  });
+
+  logger.info("Updated movie rating", { movieId, rating: newRating });
+  return { message: "Movie rating updated successfully" };
+};
+
+export const getTopRatedMovies = async (limit: number) => {
+  // Fetch top-rated movies
+  const movies = await prisma.movie.findMany({
+    where: {
+      rating: {
+        gt: 0,
+      },
+    },
+    orderBy: { rating: "desc" },
+    take: limit,
+    include: {
+      genres: {
+        where: { isActive: true },
+      },
+    },
+  });
+
+  logger.info("Fetched top-rated movies", { limit, count: movies.length });
+  return movies;
+};

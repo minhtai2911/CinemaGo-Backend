@@ -16,6 +16,7 @@ export const reviewTypeDef = `#graphql
     type Response {
         userId: String!
         content: String!
+        userDetail: UserDetail!
         createdAt: String!
     }
 
@@ -34,7 +35,7 @@ export const reviewTypeDef = `#graphql
         response: [Response!]
         isActive: Boolean!
         type: String!
-        userDetail: UserDetail
+        userDetail: UserDetail!
         createdAt: String!
         updatedAt: String!
     }

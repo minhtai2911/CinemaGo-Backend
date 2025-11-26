@@ -30,7 +30,7 @@ export const getUsers = async ({
         ],
       }),
       ...(role && { role: role as Role }),
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
     ...(page && limit
       ? {
@@ -49,7 +49,7 @@ export const getUsers = async ({
         ],
       }),
       ...(role && { role: role as Role }),
-      ...(isActive && { isActive }),
+      ...(isActive !== undefined ? { isActive } : {}),
     },
   });
 

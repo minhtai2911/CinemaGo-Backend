@@ -32,5 +32,11 @@ router.get(
   authorizeRole("ADMIN"),
   BookingController.getRevenueByPeriodAndCinema
 );
+router.get(
+  "/dashboard/get-all",
+  authenticateRequest,
+  authorizeRole("ADMIN"),
+  BookingController.getBookings
+);
 
 export default router;
