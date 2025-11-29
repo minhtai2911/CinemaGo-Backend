@@ -263,6 +263,7 @@ export const holdSeat = async (
       showtimeId,
       seatId,
       extraPrice: seat.extraPrice || 0,
+      expiresAt: Date.now() + 300000,
     }),
     "NX",
     "EX",
@@ -272,6 +273,16 @@ export const holdSeat = async (
   if (result !== "OK") {
     throw new CustomError("Seat already held", 409);
   }
+
+  await redisClient.publish(
+    "seat-update-channel",
+    JSON.stringify({
+      showtimeId,
+      seatId,
+      status: "held",
+      expiresAt: Date.now() + 300000,
+    })
+  );
 
   return { message: "Seats held successfully" };
 };
@@ -309,6 +320,16 @@ export const releaseSeat = async (
   }
 
   await redisClient.del(key);
+
+  await redisClient.publish(
+    "seat-update-channel",
+    JSON.stringify({
+      showtimeId,
+      seatId,
+      status: "released",
+      expiresAt: null,
+    })
+  );
 
   return { message: "Seat released successfully" };
 };
