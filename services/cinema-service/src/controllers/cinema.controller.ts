@@ -3,13 +3,14 @@ import * as cinemaService from "../services/cinema.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getCinemas = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, isActive } = req.query;
+  const { page, limit, search, isActive, city } = req.query;
 
   const data = await cinemaService.getCinemas({
     page: Number(page) || undefined,
     limit: Number(limit) || undefined,
     search: search ? String(search) : "",
     isActive: isActive !== undefined ? isActive === "true" : undefined,
+    city: city ? String(city) : undefined,
   });
 
   res.status(200).json({

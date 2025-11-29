@@ -7,17 +7,20 @@ export const getCinemas = async ({
   limit,
   search = "",
   isActive,
+  city,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   isActive?: boolean;
+  city?: string;
 }) => {
   // Fetch cinemas with pagination and search functionality
   const cinemas = await prisma.cinema.findMany({
     where: {
       name: { contains: search, mode: "insensitive" },
       ...(isActive !== undefined ? { isActive } : {}),
+      ...(city ? { city } : {}),
     },
     ...(page && limit
       ? {
@@ -31,6 +34,7 @@ export const getCinemas = async ({
     where: {
       name: { contains: search, mode: "insensitive" },
       ...(isActive !== undefined ? { isActive } : {}),
+      ...(city ? { city } : {}),
     },
   });
 
