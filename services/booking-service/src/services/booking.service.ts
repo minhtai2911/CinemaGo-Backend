@@ -186,6 +186,18 @@ export const createBooking = async (
     return booking;
   });
 
+  await Promise.all(seatIds.map(async (seatId) => {
+    await redisClient.publish(
+      "seat-update-channel",
+      JSON.stringify({
+        showtimeId,
+        seatId,
+        status: "booked",
+        expiresAt: null,
+      })
+    );
+  }));
+
   return result;
 };
 
