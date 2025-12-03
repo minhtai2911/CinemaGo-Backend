@@ -251,3 +251,19 @@ export const getBusyRoomIds = async (
 
   return busyRoomIds;
 };
+
+export const getShowtimesByIds = async (showtimeIds: string[]) => {
+  // Fetch showtimes by a list of IDs
+  const showtimes = await prisma.showtime.findMany({
+    where: {
+      id: { in: showtimeIds },
+    },
+  });
+
+  logger.info("Fetched showtimes by IDs", {
+    showtimeIds,
+    count: showtimes.length,
+  });
+
+  return showtimes;
+};

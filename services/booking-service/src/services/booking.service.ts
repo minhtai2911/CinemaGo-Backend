@@ -177,26 +177,9 @@ export const createBooking = async (
         bookingFoodDrinks: true,
       },
     });
-    // Delete the held seats from Redis
-    const deletePromises = seatIds.map((seatId) =>
-      redisClient.del(`hold:${showtimeId}:${seatId}`)
-    );
-    await Promise.all(deletePromises);
 
     return booking;
   });
-
-  await Promise.all(seatIds.map(async (seatId) => {
-    await redisClient.publish(
-      "seat-update-channel",
-      JSON.stringify({
-        showtimeId,
-        seatId,
-        status: "booked",
-        expiresAt: null,
-      })
-    );
-  }));
 
   return result;
 };

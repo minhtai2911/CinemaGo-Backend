@@ -166,3 +166,23 @@ export const getBusyRoomIds = asyncHandler(
     res.status(200).json({ data: busyRoomIds });
   }
 );
+
+export const getShowtimesByIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { showtimeIds } = req.body;
+
+    if (
+      !showtimeIds ||
+      !Array.isArray(showtimeIds) ||
+      showtimeIds.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ message: "showtimeIds must be a non-empty array" });
+    }
+
+    const showtimes = await showtimeService.getShowtimesByIds(showtimeIds);
+
+    res.status(200).json({ data: showtimes });
+  }
+);

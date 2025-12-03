@@ -164,25 +164,29 @@ export const checkoutWithMoMo = async ({
   logger.info("MoMo payment created successfully", {
     response: response.data,
   });
-  return response.data.payUrl;
+  return { payUrl: response.data.payUrl, paymentId };
 };
 
-export const callbackMoMo = async (resultCode: number, paymentId: string) => {
+export const callbackMoMo = async (
+  redisClient: any,
+  resultCode: number,
+  paymentId: string
+) => {
   // Handle the callback from MoMo after payment
   if (resultCode !== 0) {
     logger.error("MoMo payment failed", { resultCode, paymentId });
     throw new CustomError("Payment failed", 400);
   }
-  // Update the payment status to paid
-  const payment = await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: "Đã thanh toán" },
-  });
-  logger.info("MoMo payment successful", { payment });
+
+  await handlePaymentSuccess(redisClient, paymentId);
+
   return { message: "MoMo payment successful" };
 };
 
-export const checkStatusTransactionMoMo = async (paymentId: string) => {
+export const checkStatusTransactionMoMo = async (
+  redisClient: any,
+  paymentId: string
+) => {
   // Prepare the request to check the payment status with MoMo
   const accessKey = process.env.ACCESS_KEY_MOMO as string;
   const secretKey = process.env.SECRET_KEY_MOMO as string;
@@ -229,14 +233,8 @@ export const checkStatusTransactionMoMo = async (paymentId: string) => {
     };
   }
   // Update the payment status in the database
-  const payment = await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: "Đã thanh toán" },
-  });
+  const payment = await handlePaymentSuccess(redisClient, paymentId);
 
-  logger.info("Checked MoMo payment status successfully", {
-    payment,
-  });
   return payment;
 };
 
@@ -298,7 +296,10 @@ export const checkoutWithVnPay = async ({
   return url;
 };
 
-export const callbackVnPay = async (rawParams: Record<string, string>) => {
+export const callbackVnPay = async (
+  redisClient: any,
+  rawParams: Record<string, string>
+) => {
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
   const secureHash = rawParams["vnp_SecureHash"];
   const responseCode = rawParams["vnp_ResponseCode"];
@@ -330,40 +331,13 @@ export const callbackVnPay = async (rawParams: Record<string, string>) => {
     throw new CustomError("Invalid secure hash", 400);
   }
 
-  // Find the payment in the DB
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-  });
-  // If payment not found, throw a custom error
-  if (!payment) {
-    logger.warn("Payment not found");
-    throw new CustomError("Payment not found", 404);
-  }
-  // If payment already completed, throw a custom error
-  if (payment.status === "Đã thanh toán") {
-    logger.warn("Payment already completed", { paymentId });
-    throw new CustomError("Payment already completed", 400);
-  }
-  // Check if the amount matches the payment amount
-  if (payment.amount !== amount) {
-    logger.warn("Payment amount mismatch", {
-      paymentId,
-      expected: payment.amount,
-      received: amount,
-    });
-    throw new CustomError("Payment amount mismatch", 400);
-  }
-  // If response code is not "00", throw a custom error
   if (responseCode !== "00") {
-    logger.warn("Payment failed", { paymentId, responseCode });
+    logger.error("VnPay payment failed", { responseCode, paymentId });
     throw new CustomError("Payment failed", 400);
   }
-  // Update the payment status to "Đã thanh toán"
-  logger.info("Payment successful", { paymentId, amount });
-  await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: "Đã thanh toán" },
-  });
+
+  await handlePaymentSuccess(redisClient, paymentId);
+
   return `${process.env.URL_CHECKOUT_COMPLETED}?status=success&paymentId=${paymentId}`;
 };
 
@@ -447,6 +421,7 @@ export const checkoutWithZaloPay = async ({
 };
 
 export const callbackZaloPay = async (
+  redisClient: any,
   app_trans_id: string,
   amount: number,
   mac: string,
@@ -458,14 +433,6 @@ export const callbackZaloPay = async (
   const paymentId = app_trans_id
     .split("_")[1]
     .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-  });
-  // If payment not found, throw a custom error
-  if (!payment) {
-    logger.warn("Payment not found", { paymentId });
-    throw new CustomError("Payment not found", 404);
-  }
 
   const expected = CryptoJS.HmacSHA256(data, key2).toString();
 
@@ -477,30 +444,15 @@ export const callbackZaloPay = async (
     throw new CustomError("Invalid ZaloPay callback signature", 400);
   }
 
-  if (payment.status === "Đã thanh toán") {
-    logger.warn("Payment already completed", { paymentId });
-    throw new CustomError("Payment already completed", 400);
-  }
+  await handlePaymentSuccess(redisClient, paymentId);
 
-  if (payment.amount !== amount) {
-    logger.warn("Payment amount mismatch", {
-      paymentId,
-      expected: payment.amount,
-      received: amount,
-    });
-    throw new CustomError("Payment amount mismatch", 400);
-  }
-
-  // Update the payment status to "Đã thanh toán"
-  const updatedPayment = await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: "Đã thanh toán" },
-  });
-  logger.info("ZaloPay payment successful", { payment: updatedPayment });
   return { message: "ZaloPay payment successful" };
 };
 
-export const checkStatusTransactionZaloPay = async (app_trans_id: string) => {
+export const checkStatusTransactionZaloPay = async (
+  redisClient: any,
+  app_trans_id: string
+) => {
   // Prepare the request to check the payment status with ZaloPay
   const app_id = process.env.APP_ID_ZALOPAY as string;
   const key1 = process.env.KEY1_ZALOPAY as string;
@@ -532,6 +484,16 @@ export const checkStatusTransactionZaloPay = async (app_trans_id: string) => {
     .split("_")[1]
     .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
+  const updatedPayment = handlePaymentSuccess(redisClient, paymentId);
+
+  return updatedPayment;
+};
+
+export const handlePaymentSuccess = async (
+  redisClient: any,
+  paymentId: string
+) => {
+  // Handle payment success for any payment method
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
   });
@@ -546,11 +508,29 @@ export const checkStatusTransactionZaloPay = async (app_trans_id: string) => {
     throw new CustomError("Payment already completed", 400);
   }
 
-  // Update the payment status to "Đã thanh toán"
   const updatedPayment = await prisma.payment.update({
     where: { id: paymentId },
     data: { status: "Đã thanh toán" },
   });
-  logger.info("ZaloPay payment successful", { payment: updatedPayment });
+
+  const { data: booking } = await axios.get(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment.bookingId}`
+  );
+
+  await Promise.all(
+    booking.BookingSeat.map((seat: any) =>
+      redisClient.publish(
+        "seat-update-channel",
+        JSON.stringify({
+          showtimeId: booking.showtimeId,
+          seatId: seat.seatId,
+          status: "booked",
+          expiresAt: null,
+        })
+      )
+    )
+  );
+
+  logger.info("Payment marked as successful", { payment: updatedPayment });
   return updatedPayment;
 };

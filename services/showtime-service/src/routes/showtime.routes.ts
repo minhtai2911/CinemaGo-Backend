@@ -34,5 +34,6 @@ router.put(
   authorizeRole("ADMIN"),
   ShowtimeController.restoreShowtimeById
 );
+router.get("/public/batch", ShowtimeController.getShowtimesByIds);
 
 export default router;

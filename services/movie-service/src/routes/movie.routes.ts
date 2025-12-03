@@ -50,6 +50,6 @@ router.get(
 );
 router.post("/public/batch", MovieController.getMoviesByIds);
 router.post("/calculate-movie-rating", MovieController.calculateMovieRating);
-router.get("/public/top-rated/:limit", MovieController.getTopRatedMovies);
+router.get("/public/top-rated", MovieController.getTopRatedMovies);
 
 export default router;

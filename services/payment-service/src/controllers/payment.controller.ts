@@ -60,12 +60,12 @@ export const checkoutWithMoMo = asyncHandler(
       method,
     });
 
-    const paymentUrl = await paymentService.checkoutWithMoMo({
+    const { payUrl, paymentId } = await paymentService.checkoutWithMoMo({
       amount,
       paymentId: payment.id,
     });
 
-    res.status(200).json({ URL: paymentUrl });
+    res.status(200).json({ URL: payUrl, paymentId });
   }
 );
 
@@ -78,6 +78,7 @@ export const callbackMoMo = asyncHandler(
     }
 
     const message = await paymentService.callbackMoMo(
+      req.redisClient,
       Number(resultCode),
       String(orderId)
     );
@@ -94,7 +95,10 @@ export const checkStatusTransactionMoMo = asyncHandler(
       return res.status(400).json({ message: "Missing payment ID" });
     }
 
-    const payment = await paymentService.checkStatusTransactionMoMo(paymentId);
+    const payment = await paymentService.checkStatusTransactionMoMo(
+      req.redisClient,
+      paymentId
+    );
     res.status(200).json({ data: payment });
   }
 );
@@ -138,7 +142,7 @@ export const callbackVnPay = asyncHandler(
       return res.status(400).json({ message: "Missing query parameters" });
     }
 
-    const url = await paymentService.callbackVnPay(rawParams);
+    const url = await paymentService.callbackVnPay(req.redisClient, rawParams);
     res.redirect(url);
   }
 );
@@ -183,6 +187,7 @@ export const callbackZaloPay = asyncHandler(
     }
 
     const message = await paymentService.callbackZaloPay(
+      req.redisClient,
       app_trans_id,
       amount,
       mac,
@@ -200,6 +205,7 @@ export const checkStatusTransactionZaloPay = asyncHandler(
     }
 
     const payment = await paymentService.checkStatusTransactionZaloPay(
+      req.redisClient,
       app_trans_id
     );
     res.status(200).json({ data: payment });
