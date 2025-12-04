@@ -131,27 +131,35 @@ export const getRevenueByPeriodAndMovie = asyncHandler(
   }
 );
 
-export const getBookings = asyncHandler(
+export const getBookings = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, showtimeId, type } = req.query;
+
+  const data = await bookingService.getBookings({
+    page: Number(page) || undefined,
+    limit: Number(limit) || undefined,
+    showtimeId: showtimeId as string | undefined,
+    type: type as string | undefined,
+  });
+
+  res.status(200).json({
+    pagination: {
+      totalItems: data.totalItems,
+      totalPages: data.totalPages,
+      currentPage: Number(page) || 1,
+      pageSize: Number(limit) || data.totalItems,
+      hasNextPage: Number(page) ? Number(page) < data.totalPages : false,
+      hasPrevPage: Number(page) ? Number(page) > 1 : false,
+    },
+    data: data.bookings,
+  });
+});
+
+export const deleteBookingById = asyncHandler(
   async (req: Request, res: Response) => {
-    const { page, limit, showtimeId, type } = req.query;
+    const bookingId = req.params.id;
 
-    const data = await bookingService.getBookings({
-      page: Number(page) || undefined,
-      limit: Number(limit) || undefined,
-      showtimeId: showtimeId as string | undefined,
-      type: type as string | undefined,
-    });
+    await bookingService.deleteBookingById(req.redisClient, bookingId);
 
-    res.status(200).json({
-      pagination: {
-        totalItems: data.totalItems,
-        totalPages: data.totalPages,
-        currentPage: Number(page) || 1,
-        pageSize: Number(limit) || data.totalItems,
-        hasNextPage: Number(page) ? Number(page) < data.totalPages : false,
-        hasPrevPage: Number(page) ? Number(page) > 1 : false,
-      },
-      data: data.bookings,
-    });
+    res.status(200).json({ message: "Booking deleted successfully" });
   }
 );

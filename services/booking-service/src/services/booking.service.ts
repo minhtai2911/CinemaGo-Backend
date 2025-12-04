@@ -425,3 +425,51 @@ export const getBookings = async ({
     totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
 };
+
+export const deleteBookingById = async (
+  redisClient: any,
+  bookingId: string
+) => {
+  return await prisma.$transaction(async (tx) => {
+    const booking = await tx.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        bookingSeats: true,
+        bookingFoodDrinks: true,
+      },
+    });
+
+    if (!booking) {
+      logger.warn("Booking not found for deletion", { bookingId });
+      throw new CustomError("Booking not found", 404);
+    }
+
+    await tx.bookingSeat.deleteMany({
+      where: { bookingId },
+    });
+
+    await tx.bookingFoodDrink.deleteMany({
+      where: { bookingId },
+    });
+
+    await tx.booking.delete({
+      where: { id: bookingId },
+    });
+
+    for (const seat of booking.bookingSeats) {
+      await redisClient.publish(
+        "seat-update-channel",
+        JSON.stringify({
+          showtimeId: booking.showtimeId,
+          seatId: seat.seatId,
+          status: "released",
+          expiresAt: null,
+        })
+      );
+    }
+
+    logger.info("Booking deleted successfully", { bookingId });
+
+    return { success: true };
+  });
+};

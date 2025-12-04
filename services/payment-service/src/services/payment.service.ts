@@ -174,6 +174,18 @@ export const callbackMoMo = async (
 ) => {
   // Handle the callback from MoMo after payment
   if (resultCode !== 0) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.error("MoMo payment failed", { resultCode, paymentId });
     throw new CustomError("Payment failed", 400);
   }
@@ -223,6 +235,18 @@ export const checkStatusTransactionMoMo = async (
 
   // Check if the response indicates a successful status check
   if (response.data.resultCode !== 0) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.info("MoMo payment failed", {
       paymentId,
       data: response.data,
@@ -327,11 +351,35 @@ export const callbackVnPay = async (
 
   // Verify the secure hash
   if (secureHash !== signed) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.warn("Invalid secure hash", { secureHash, signed });
     throw new CustomError("Invalid secure hash", 400);
   }
 
   if (responseCode !== "00") {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.error("VnPay payment failed", { responseCode, paymentId });
     throw new CustomError("Payment failed", 400);
   }
@@ -437,6 +485,18 @@ export const callbackZaloPay = async (
   const expected = CryptoJS.HmacSHA256(data, key2).toString();
 
   if (expected !== mac) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.warn("Invalid ZaloPay callback signature", {
       expected,
       received: mac,
@@ -469,7 +529,23 @@ export const checkStatusTransactionZaloPay = async (
 
   const result = await axios.post(endpoint, null, { params });
 
+  const paymentId = app_trans_id
+    .split("_")[1]
+    .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
+
   if (result.data.return_code !== 1) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    await axios.delete(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    );
+
+    await prisma.payment.delete({
+      where: { id: paymentId },
+    });
+
     logger.info("Zalopay payment failed", {
       data: result.data,
       params,
@@ -479,10 +555,6 @@ export const checkStatusTransactionZaloPay = async (
       message: "Zalopay payment failed",
     };
   }
-
-  const paymentId = app_trans_id
-    .split("_")[1]
-    .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
   const updatedPayment = handlePaymentSuccess(redisClient, paymentId);
 
