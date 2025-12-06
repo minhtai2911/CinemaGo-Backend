@@ -94,7 +94,7 @@ export const checkoutWithMoMo = async ({
   const orderInfo = "Checkout with MoMo";
   const partnerCode = "MOMO";
   const redirectUrl = process.env.URL_CHECKOUT_COMPLETED as string;
-  const ipnUrl = `${process.env.LINK_NGROK}/api/v1/payments/momo/callback`;
+  const ipnUrl = `${process.env.LINK_NGROK}/v1/payments/momo/callback`;
   const requestType = "payWithMethod";
   const orderId = paymentId;
   const requestId = orderId;
@@ -278,7 +278,7 @@ export const checkoutWithVnPay = async ({
   const bankCode = "NCB";
 
   const vnpUrl = process.env.VNP_URL as string;
-  const vnpReturnUrl = `${process.env.LINK_NGROK}/api/v1/payments/vnpay/callback`;
+  const vnpReturnUrl = `${process.env.LINK_NGROK}/v1/payments/vnpay/callback`;
   const vnpTmnCode = process.env.VNP_TMN_CODE as string;
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
 
@@ -427,7 +427,7 @@ export const checkoutWithZaloPay = async ({
     ]),
     embed_data: JSON.stringify(embed_data),
     amount,
-    callback_url: `${process.env.LINK_NGROK}/api/v1/payments/zalopay/callback`,
+    callback_url: `${process.env.LINK_NGROK}/v1/payments/zalopay/callback`,
     description: `Thanh toán đơn hàng ${paymentId}`,
     bank_code: "",
   };

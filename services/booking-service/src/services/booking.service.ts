@@ -466,6 +466,8 @@ export const deleteBookingById = async (
           expiresAt: null,
         })
       );
+
+      await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
     }
 
     logger.info("Booking deleted successfully", { bookingId });
