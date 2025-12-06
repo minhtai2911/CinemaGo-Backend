@@ -31,6 +31,9 @@ export const verifyToken = (
     "/predict-sentiment",
     "/public",
     "/verify-otp",
+    "/vnpay/callback",
+    "/zalopay/callback",
+    "/momo/callback",
   ];
   // Allow public routes to be accessed without authentication
   const isPublic = publicRoutes.some((path) => req.path.startsWith(path));
