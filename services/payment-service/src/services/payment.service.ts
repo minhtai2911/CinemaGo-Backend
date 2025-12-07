@@ -592,7 +592,7 @@ export const handlePaymentSuccess = async (
   );
 
   await Promise.all(
-    booking.BookingSeat.map((seat: any) =>
+    booking.bookingSeats.map((seat: any) =>
       redisClient.publish(
         "seat-update-channel",
         JSON.stringify({
