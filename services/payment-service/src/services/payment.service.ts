@@ -251,10 +251,8 @@ export const checkStatusTransactionMoMo = async (
       paymentId,
       data: response.data,
     });
-    return {
-      resultCode: response.data.resultCode,
-      message: "MoMo payment failed",
-    };
+
+    throw new CustomError("MoMo payment failed", 400);
   }
   // Update the payment status in the database
   const payment = await handlePaymentSuccess(redisClient, paymentId);
@@ -550,10 +548,8 @@ export const checkStatusTransactionZaloPay = async (
       data: result.data,
       params,
     });
-    return {
-      return_code: result.data.return_code,
-      message: "Zalopay payment failed",
-    };
+
+    throw new CustomError("ZaloPay payment failed", 400);
   }
 
   const updatedPayment = handlePaymentSuccess(redisClient, paymentId);
