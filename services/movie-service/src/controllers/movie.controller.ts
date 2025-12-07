@@ -85,6 +85,7 @@ export const updateMovieById = asyncHandler(
       title,
       description,
       duration,
+      status,
       releaseDate,
       genresIds,
       trailerPath,
@@ -100,13 +101,14 @@ export const updateMovieById = asyncHandler(
     const thumbnail = files?.["thumbnail"]?.[0]?.path || "";
     const trailerUrl = files?.["trailer"]?.[0]?.path || "";
 
-    if (!title || !description || !duration || !releaseDate) {
+    if (!title || !description || !duration || !releaseDate || !status) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const data: any = {
       title,
       description,
+      status,
       duration: Number(duration),
       releaseDate: new Date(releaseDate),
     };

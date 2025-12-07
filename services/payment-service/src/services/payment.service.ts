@@ -585,7 +585,9 @@ export const handlePaymentSuccess = async (
     data: { status: "Đã thanh toán" },
   });
 
-  const { data: booking } = await axios.get(
+  const {
+    data: { data: booking },
+  } = await axios.get(
     `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment.bookingId}`
   );
 

@@ -175,6 +175,7 @@ export const updateMovieById = async (
     title: string;
     description: string;
     duration: number;
+    status: string;
     releaseDate: Date;
     genres: string[];
     thumbnail?: string;
@@ -195,6 +196,7 @@ export const updateMovieById = async (
     title: data.title,
     description: data.description,
     duration: data.duration,
+    status: data.status,
     releaseDate: data.releaseDate,
   };
   // If thumbnail is provided, upload it

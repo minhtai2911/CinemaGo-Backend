@@ -8,7 +8,7 @@ import {
 const router = express.Router();
 
 router.get("/", authenticateRequest, BookingController.getBookingsByUserId);
-router.get("/:id", authenticateRequest, BookingController.getBookingById);
+router.get("/:id", BookingController.getBookingById);
 router.post("/", authenticateRequest, BookingController.createBooking);
 router.get(
   "/public/:showtimeId/booking-seat",

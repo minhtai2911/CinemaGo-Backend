@@ -268,7 +268,9 @@ export const getRevenueByPeriodAndCinema = async (
 
   const showtimeIds = [...new Set(bookings.map((b) => b.showtimeId))];
 
-  const { data: showtimes } = await axios.post(
+  const {
+    data: { data: showtimes },
+  } = await axios.post(
     `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
     { showtimeIds }
   );
@@ -287,7 +289,9 @@ export const getRevenueByPeriodAndCinema = async (
     revenueMap[cinemaId] = (revenueMap[cinemaId] || 0) + booking.totalPrice;
   }
 
-  const { data: cinemas } = await axios.post(
+  const {
+    data: { data: cinemas },
+  } = await axios.post(
     `${process.env.CINEMA_SERVICE_URL}/api/cinemas/public/batch`,
     { cinemaIds: Object.keys(revenueMap) }
   );
@@ -334,7 +338,9 @@ export const getRevenueByPeriodAndMovie = async (
 
   const showtimeIds = [...new Set(bookings.map((b) => b.showtimeId))];
 
-  const { data: showtimes } = await axios.post(
+  const {
+    data: { data: showtimes },
+  } = await axios.post(
     `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
     { showtimeIds }
   );
@@ -353,7 +359,9 @@ export const getRevenueByPeriodAndMovie = async (
     revenueMap[movieId] = (revenueMap[movieId] || 0) + booking.totalPrice;
   }
 
-  const { data: movies } = await axios.post(
+  const {
+    data: { data: movies },
+  } = await axios.post(
     `${process.env.MOVIE_SERVICE_URL}/api/movies/public/batch`,
     { movieIds: Object.keys(revenueMap) }
   );
