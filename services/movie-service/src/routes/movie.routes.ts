@@ -8,6 +8,7 @@ import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
+router.get("/public/top-rated", MovieController.getTopRatedMovies);
 router.get("/public", MovieController.getMovies);
 router.get("/public/:movieId", MovieController.getMovieById);
 router.post(
@@ -50,6 +51,5 @@ router.get(
 );
 router.post("/public/batch", MovieController.getMoviesByIds);
 router.post("/calculate-movie-rating", MovieController.calculateMovieRating);
-router.get("/public/top-rated", MovieController.getTopRatedMovies);
 
 export default router;
