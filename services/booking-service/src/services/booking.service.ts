@@ -189,11 +189,7 @@ export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   const bookingSeats = await prisma.bookingSeat.findMany({
     where: { showtimeId },
   });
-  // If no booking seats found, throw a custom error
-  if (!bookingSeats || bookingSeats.length === 0) {
-    logger.warn("No booking seats found for showtime", { showtimeId });
-    throw new CustomError("No booking seats found for this showtime", 404);
-  }
+  
   logger.info("Fetched booking seats for showtime", {
     showtimeId,
     bookingSeats,

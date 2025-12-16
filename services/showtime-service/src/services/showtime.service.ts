@@ -37,6 +37,16 @@ export const getShowtimes = async ({
       lte: endTime,
     };
   }
+  if (startTime && !endTime) {
+    where.startTime = {
+      gte: startTime,
+    };
+  }
+  if (!startTime && endTime) {
+    where.startTime = {
+      lte: endTime,
+    };
+  }
 
   const showtimes = await prisma.showtime.findMany({
     where,
