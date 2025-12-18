@@ -19,7 +19,7 @@ export const generateTokens = async (
       publicId: publicId,
     },
     process.env.ACCESS_TOKEN_SECRET || "defaultAccessTokenSecret",
-    { expiresIn: "15m" }
+    { expiresIn: "1d" }
   );
 
   const refreshToken = jwt.sign(

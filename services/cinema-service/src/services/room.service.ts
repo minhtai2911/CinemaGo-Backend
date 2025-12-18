@@ -263,11 +263,11 @@ export const holdSeat = async (
       showtimeId,
       seatId,
       extraPrice: seat.extraPrice || 0,
-      expiresAt: Date.now() + 300000,
+      expiresAt: Date.now() + 330000,
     }),
     "NX",
     "EX",
-    300 // 5 minutes
+    330 // 5.5 minutes
   );
 
   if (result !== "OK") {
@@ -280,7 +280,7 @@ export const holdSeat = async (
       showtimeId,
       seatId,
       status: "held",
-      expiresAt: Date.now() + 300000,
+      expiresAt: Date.now() + 330000,
     })
   );
 
