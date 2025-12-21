@@ -85,9 +85,6 @@ services:
       context: ./services/payment-service
       dockerfile: Dockerfile
     env_file: ./services/payment-service/.env
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   notification-service:
     build:
