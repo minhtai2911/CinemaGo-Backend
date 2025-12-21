@@ -6,7 +6,7 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 export const getBookingsByUserId = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const { page, limit } = req.query;
+    const { page, limit, status } = req.query;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -15,7 +15,9 @@ export const getBookingsByUserId = asyncHandler(
       userId,
       page: Number(page) || undefined,
       limit: Number(limit) || undefined,
+      status: status as string | undefined,
     });
+
     res.status(200).json({
       pagination: {
         totalItems: data.totalItems,
@@ -132,13 +134,14 @@ export const getRevenueByPeriodAndMovie = asyncHandler(
 );
 
 export const getBookings = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, showtimeId, type } = req.query;
+  const { page, limit, showtimeId, type, status } = req.query;
 
   const data = await bookingService.getBookings({
     page: Number(page) || undefined,
     limit: Number(limit) || undefined,
     showtimeId: showtimeId as string | undefined,
     type: type as string | undefined,
+    status: status as string | undefined,
   });
 
   res.status(200).json({
@@ -153,16 +156,6 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
     data: data.bookings,
   });
 });
-
-export const deleteBookingById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const bookingId = req.params.id;
-
-    await bookingService.deleteBookingById(req.redisClient, bookingId);
-
-    res.status(200).json({ message: "Booking deleted successfully" });
-  }
-);
 
 export const updateBookingStatus = asyncHandler(
   async (req: Request, res: Response) => {

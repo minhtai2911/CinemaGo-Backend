@@ -7,15 +7,18 @@ export const getBookingsByUserId = async ({
   userId,
   page,
   limit,
+  status,
 }: {
   userId: string;
   page?: number;
   limit?: number;
+  status?: string;
 }) => {
   // Fetch bookings for a specific user with pagination
   const bookings = await prisma.booking.findMany({
     where: {
       userId,
+      ...(status ? { status } : {}),
     },
     include: {
       bookingSeats: true,
@@ -32,6 +35,7 @@ export const getBookingsByUserId = async ({
   const totalItems = await prisma.booking.count({
     where: {
       userId,
+      ...(status ? { status } : {}),
     },
   });
 
@@ -209,6 +213,7 @@ export const getRevenueByPeriod = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     _sum: {
       totalPrice: true,
@@ -254,6 +259,7 @@ export const getRevenueByPeriodAndCinema = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     select: { showtimeId: true, totalPrice: true },
   });
@@ -324,6 +330,7 @@ export const getRevenueByPeriodAndMovie = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     select: { showtimeId: true, totalPrice: true },
   });
@@ -387,17 +394,20 @@ export const getBookings = async ({
   limit,
   showtimeId,
   type,
+  status,
 }: {
   page?: number;
   limit?: number;
   showtimeId?: string;
   type?: string;
+  status?: string;
 }) => {
   // Fetch bookings with optional filters and pagination
   const bookings = await prisma.booking.findMany({
     where: {
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
+      ...(status ? { status } : {}),
     },
     include: {
       bookingSeats: true,
@@ -415,6 +425,7 @@ export const getBookings = async ({
     where: {
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
+      ...(status ? { status } : {}),
     },
   });
 
@@ -428,56 +439,6 @@ export const getBookings = async ({
     totalItems,
     totalPages: limit ? Math.ceil(totalItems / limit) : 1,
   };
-};
-
-export const deleteBookingById = async (
-  redisClient: any,
-  bookingId: string
-) => {
-  return await prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        bookingSeats: true,
-        bookingFoodDrinks: true,
-      },
-    });
-
-    if (!booking) {
-      logger.warn("Booking not found for deletion", { bookingId });
-      throw new CustomError("Booking not found", 404);
-    }
-
-    await tx.bookingSeat.deleteMany({
-      where: { bookingId },
-    });
-
-    await tx.bookingFoodDrink.deleteMany({
-      where: { bookingId },
-    });
-
-    await tx.booking.delete({
-      where: { id: bookingId },
-    });
-
-    for (const seat of booking.bookingSeats) {
-      await redisClient.publish(
-        "seat-update-channel",
-        JSON.stringify({
-          showtimeId: booking.showtimeId,
-          seatId: seat.seatId,
-          status: "released",
-          expiresAt: null,
-        })
-      );
-
-      await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
-    }
-
-    logger.info("Booking deleted successfully", { bookingId });
-
-    return { success: true };
-  });
 };
 
 export const updateBookingStatus = async (
