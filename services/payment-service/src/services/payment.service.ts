@@ -74,6 +74,7 @@ export const createPayment = async ({
       amount,
       bookingId,
       method,
+      status: method === "COD" ? "Đã thanh toán" : "Chưa thanh toán",
     },
   });
 

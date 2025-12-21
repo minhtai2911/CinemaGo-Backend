@@ -20,7 +20,7 @@ model Payment {
   userId    String
   method    String
   amount    Int
-  status    String   @default("Chờ thanh toán")
+  status    String   @default("Chưa thanh toán")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
