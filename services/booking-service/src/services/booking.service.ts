@@ -189,7 +189,7 @@ export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   const bookingSeats = await prisma.bookingSeat.findMany({
     where: { showtimeId },
   });
-  
+
   logger.info("Fetched booking seats for showtime", {
     showtimeId,
     bookingSeats,
@@ -478,4 +478,71 @@ export const deleteBookingById = async (
 
     return { success: true };
   });
+};
+
+export const updateBookingStatus = async (
+  redisClient: any,
+  bookingId: string,
+  status: string,
+  paymentMethod: string
+) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      bookingSeats: true,
+    },
+  });
+
+  if (!booking) {
+    logger.warn("Booking not found for status update", { bookingId });
+    throw new CustomError("Booking not found", 404);
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      status,
+      paymentMethod,
+    },
+  });
+
+  if (status === "Thanh toán thất bại") {
+    for (const seat of booking.bookingSeats) {
+      await redisClient.publish(
+        "seat-update-channel",
+        JSON.stringify({
+          showtimeId: booking.showtimeId,
+          seatId: seat.seatId,
+          status: "released",
+          expiresAt: null,
+        })
+      );
+
+      await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
+    }
+  }
+
+  if (status === "Đã thanh toán") {
+    for (const seat of booking.bookingSeats) {
+      await redisClient.publish(
+        "seat-update-channel",
+        JSON.stringify({
+          showtimeId: booking.showtimeId,
+          seatId: seat.seatId,
+          status: "booked",
+          expiresAt: null,
+        })
+      );
+
+      await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
+    }
+  }
+
+  logger.info("Booking status updated successfully", {
+    bookingId,
+    status,
+    paymentMethod,
+  });
+
+  return updatedBooking;
 };

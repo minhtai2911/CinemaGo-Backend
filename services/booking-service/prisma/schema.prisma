@@ -20,6 +20,8 @@ model Booking {
   type              String
   showtimeId        String
   totalPrice        Int
+  status            String             @default("Chưa thanh toán")
+  paymentMethod     String             @default("COD")
   bookingSeats      BookingSeat[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt

@@ -163,3 +163,19 @@ export const deleteBookingById = asyncHandler(
     res.status(200).json({ message: "Booking deleted successfully" });
   }
 );
+
+export const updateBookingStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const bookingId = req.params.id;
+    const { status, paymentMethod } = req.body;
+
+    const updatedBooking = await bookingService.updateBookingStatus(
+      req.redisClient,
+      bookingId,
+      status,
+      paymentMethod
+    );
+
+    res.status(200).json({ data: updatedBooking });
+  }
+);

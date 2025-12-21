@@ -1,93 +1,15 @@
 import logger from "../utils/logger.js";
 import { CustomError } from "../utils/customError.js";
-import prisma from "../config/db.js";
 import CryptoJS from "crypto-js";
 import axios from "axios";
 import moment from "moment";
 
-export const getPaymentsByUserId = async ({
-  userId,
-  page = 1,
-  limit = 10,
-}: {
-  userId: string;
-  page?: number;
-  limit?: number;
-}) => {
-  // Fetch payments for a specific user with pagination
-  const payments = await prisma.payment.findMany({
-    where: {
-      userId,
-    },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
-  // Count total payments for pagination
-  const totalItems = await prisma.payment.count({
-    where: {
-      userId,
-    },
-  });
-  logger.info("Fetched payments for user", {
-    userId,
-    payments,
-    totalItems,
-    page,
-    limit,
-  });
-  return {
-    payments,
-    totalItems,
-    totalPages: Math.ceil(totalItems / limit),
-  };
-};
-
-export const getPaymentById = async (paymentId: string) => {
-  // Fetch a payment by its ID
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-  });
-  // If payment not found, throw a custom error
-  if (!payment) {
-    logger.warn("Payment not found", { paymentId });
-    throw new CustomError("Payment not found", 404);
-  }
-  logger.info("Fetched payment", { payment });
-  return payment;
-};
-
-export const createPayment = async ({
-  userId,
-  amount,
-  bookingId,
-  method,
-}: {
-  userId: string;
-  amount: number;
-  bookingId: string;
-  method: string;
-}) => {
-  // Create a new payment record
-  const payment = await prisma.payment.create({
-    data: {
-      userId,
-      amount,
-      bookingId,
-      method,
-      status: method === "COD" ? "Đã thanh toán" : "Chưa thanh toán",
-    },
-  });
-
-  logger.info("Created payment", { payment });
-  return payment;
-};
-
 export const checkoutWithMoMo = async ({
   amount,
-  paymentId,
+  bookingId,
 }: {
   amount: number;
-  paymentId: string;
+  bookingId: string;
 }) => {
   // Prepare the MoMo payment request
   const accessKey = process.env.ACCESS_KEY_MOMO as string;
@@ -97,7 +19,7 @@ export const checkoutWithMoMo = async ({
   const redirectUrl = process.env.URL_CHECKOUT_COMPLETED as string;
   const ipnUrl = `${process.env.LINK_NGROK}/v1/payments/momo/callback`;
   const requestType = "payWithMethod";
-  const orderId = paymentId;
+  const orderId = bookingId;
   const requestId = orderId;
   const extraData = "";
   const orderGroupId = "";
@@ -165,45 +87,34 @@ export const checkoutWithMoMo = async ({
   logger.info("MoMo payment created successfully", {
     response: response.data,
   });
-  return { payUrl: response.data.payUrl, paymentId };
+  return { payUrl: response.data.payUrl, bookingId: bookingId };
 };
 
-export const callbackMoMo = async (
-  redisClient: any,
-  resultCode: number,
-  paymentId: string
-) => {
+export const callbackMoMo = async (resultCode: number, bookingId: string) => {
   // Handle the callback from MoMo after payment
   if (resultCode !== 0) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "MoMo" }
     );
 
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
-
-    logger.error("MoMo payment failed", { resultCode, paymentId });
+    logger.error("MoMo payment failed", { resultCode, bookingId });
     throw new CustomError("Payment failed", 400);
   }
 
-  await handlePaymentSuccess(redisClient, paymentId);
+  await axios.put(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+    { status: "Đã thanh toán", paymentMethod: "MoMo" }
+  );
 
   return { message: "MoMo payment successful" };
 };
 
-export const checkStatusTransactionMoMo = async (
-  redisClient: any,
-  paymentId: string
-) => {
+export const checkStatusTransactionMoMo = async (bookingId: string) => {
   // Prepare the request to check the payment status with MoMo
   const accessKey = process.env.ACCESS_KEY_MOMO as string;
   const secretKey = process.env.SECRET_KEY_MOMO as string;
-  const orderId = paymentId;
+  const orderId = bookingId;
   const partnerCode = "MOMO";
 
   // Create the raw signature for checking payment status
@@ -236,42 +147,39 @@ export const checkStatusTransactionMoMo = async (
 
   // Check if the response indicates a successful status check
   if (response.data.resultCode !== 0) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "MoMo" }
     );
 
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
-
     logger.info("MoMo payment failed", {
-      paymentId,
+      bookingId,
       data: response.data,
     });
 
     throw new CustomError("MoMo payment failed", 400);
   }
   // Update the payment status in the database
-  const payment = await handlePaymentSuccess(redisClient, paymentId);
 
-  return payment;
+  await axios.put(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+    { status: "Đã thanh toán", paymentMethod: "MoMo" }
+  );
+
+  return { message: "MoMo payment successful" };
 };
 
 export const checkoutWithVnPay = async ({
   amount,
-  paymentId,
+  bookingId,
   ipAddr,
 }: {
   amount: number;
-  paymentId: string;
+  bookingId: string;
   ipAddr: string;
 }) => {
   // Prepare the VnPay payment request
-  const orderId = paymentId;
+  const orderId = bookingId;
   const orderInfo = "Thanh toán đơn hàng";
   const createDate = moment(new Date()).format("YYYYMMDDHHmmss");
   const bankCode = "NCB";
@@ -319,14 +227,11 @@ export const checkoutWithVnPay = async ({
   return url;
 };
 
-export const callbackVnPay = async (
-  redisClient: any,
-  rawParams: Record<string, string>
-) => {
+export const callbackVnPay = async (rawParams: Record<string, string>) => {
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
   const secureHash = rawParams["vnp_SecureHash"];
   const responseCode = rawParams["vnp_ResponseCode"];
-  const paymentId = rawParams["vnp_TxnRef"];
+  const bookingId = rawParams["vnp_TxnRef"];
   const amount = Number(rawParams["vnp_Amount"]) / 100;
 
   // Delete secure hash and secure hash type from params for signature verification
@@ -350,50 +255,39 @@ export const callbackVnPay = async (
 
   // Verify the secure hash
   if (secureHash !== signed) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "VnPay" }
     );
-
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
 
     logger.warn("Invalid secure hash", { secureHash, signed });
     throw new CustomError("Invalid secure hash", 400);
   }
 
   if (responseCode !== "00") {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "VnPay" }
     );
 
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
-
-    logger.error("VnPay payment failed", { responseCode, paymentId });
+    logger.error("VnPay payment failed", { responseCode, bookingId, amount });
     throw new CustomError("Payment failed", 400);
   }
 
-  await handlePaymentSuccess(redisClient, paymentId);
+  await axios.put(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+    { status: "Đã thanh toán", paymentMethod: "VnPay" }
+  );
 
-  return `${process.env.URL_CHECKOUT_COMPLETED}?status=success&paymentId=${paymentId}`;
+  return `${process.env.URL_CHECKOUT_COMPLETED}?status=success&bookingId=${bookingId}`;
 };
 
 export const checkoutWithZaloPay = async ({
   amount,
-  paymentId,
+  bookingId,
 }: {
   amount: number;
-  paymentId: string;
+  bookingId: string;
 }) => {
   // Prepare the ZaloPay payment request
   const app_id = process.env.APP_ID_ZALOPAY as string;
@@ -409,7 +303,7 @@ export const checkoutWithZaloPay = async ({
   const app_trans_id = `${new Date()
     .toISOString()
     .slice(2, 10)
-    .replace(/-/g, "")}_${paymentId.replace(/-/g, "")}`;
+    .replace(/-/g, "")}_${bookingId.replace(/-/g, "")}`;
 
   // Prepare the ZaloPay parameters
   const zaloPayParams: Record<string, any> = {
@@ -419,7 +313,7 @@ export const checkoutWithZaloPay = async ({
     app_time: Date.now(),
     item: JSON.stringify([
       {
-        name: `Thanh toán đơn hàng ${paymentId}`,
+        name: `Thanh toán đơn hàng ${bookingId}`,
         quantity: 1,
         price: amount,
       },
@@ -427,7 +321,7 @@ export const checkoutWithZaloPay = async ({
     embed_data: JSON.stringify(embed_data),
     amount,
     callback_url: `${process.env.LINK_NGROK}/v1/payments/zalopay/callback`,
-    description: `Thanh toán đơn hàng ${paymentId}`,
+    description: `Thanh toán đơn hàng ${bookingId}`,
     bank_code: "",
   };
 
@@ -460,7 +354,7 @@ export const checkoutWithZaloPay = async ({
   }
 
   logger.info("ZaloPay payment created successfully", {
-    paymentId,
+    bookingId,
     amount,
     result: result.data,
   });
@@ -468,7 +362,6 @@ export const checkoutWithZaloPay = async ({
 };
 
 export const callbackZaloPay = async (
-  redisClient: any,
   app_trans_id: string,
   amount: number,
   mac: string,
@@ -477,24 +370,17 @@ export const callbackZaloPay = async (
   // Handle the callback from ZaloPay after payment
   const key2 = process.env.KEY2_ZALOPAY as string;
   // Extract the payment ID from the transaction ID
-  const paymentId = app_trans_id
+  const bookingId = app_trans_id
     .split("_")[1]
     .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
   const expected = CryptoJS.HmacSHA256(data, key2).toString();
 
   if (expected !== mac) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "ZaloPay" }
     );
-
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
 
     logger.warn("Invalid ZaloPay callback signature", {
       expected,
@@ -503,15 +389,15 @@ export const callbackZaloPay = async (
     throw new CustomError("Invalid ZaloPay callback signature", 400);
   }
 
-  await handlePaymentSuccess(redisClient, paymentId);
+  await axios.put(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+    { status: "Đã thanh toán", paymentMethod: "ZaloPay" }
+  );
 
   return { message: "ZaloPay payment successful" };
 };
 
-export const checkStatusTransactionZaloPay = async (
-  redisClient: any,
-  app_trans_id: string
-) => {
+export const checkStatusTransactionZaloPay = async (app_trans_id: string) => {
   // Prepare the request to check the payment status with ZaloPay
   const app_id = process.env.APP_ID_ZALOPAY as string;
   const key1 = process.env.KEY1_ZALOPAY as string;
@@ -528,22 +414,15 @@ export const checkStatusTransactionZaloPay = async (
 
   const result = await axios.post(endpoint, null, { params });
 
-  const paymentId = app_trans_id
+  const bookingId = app_trans_id
     .split("_")[1]
     .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
 
   if (result.data.return_code !== 1) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
-
-    await axios.delete(
-      `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment?.bookingId}`
+    await axios.put(
+      `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+      { status: "Thanh toán thất bại", paymentMethod: "ZaloPay" }
     );
-
-    await prisma.payment.delete({
-      where: { id: paymentId },
-    });
 
     logger.info("Zalopay payment failed", {
       data: result.data,
@@ -553,55 +432,10 @@ export const checkStatusTransactionZaloPay = async (
     throw new CustomError("ZaloPay payment failed", 400);
   }
 
-  const updatedPayment = handlePaymentSuccess(redisClient, paymentId);
-
-  return updatedPayment;
-};
-
-export const handlePaymentSuccess = async (
-  redisClient: any,
-  paymentId: string
-) => {
-  // Handle payment success for any payment method
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-  });
-
-  if (!payment) {
-    logger.warn("Payment not found", { paymentId });
-    throw new CustomError("Payment not found", 404);
-  }
-
-  if (payment.status === "Đã thanh toán") {
-    logger.warn("Payment already completed", { paymentId });
-    throw new CustomError("Payment already completed", 400);
-  }
-
-  const updatedPayment = await prisma.payment.update({
-    where: { id: paymentId },
-    data: { status: "Đã thanh toán" },
-  });
-
-  const {
-    data: { data: booking },
-  } = await axios.get(
-    `${process.env.BOOKING_SERVICE_URL}/api/bookings/${payment.bookingId}`
+  await axios.put(
+    `${process.env.BOOKING_SERVICE_URL}/api/bookings/update-status/${bookingId}`,
+    { status: "Đã thanh toán", paymentMethod: "ZaloPay" }
   );
 
-  await Promise.all(
-    booking.bookingSeats.map((seat: any) =>
-      redisClient.publish(
-        "seat-update-channel",
-        JSON.stringify({
-          showtimeId: booking.showtimeId,
-          seatId: seat.seatId,
-          status: "booked",
-          expiresAt: null,
-        })
-      )
-    )
-  );
-
-  logger.info("Payment marked as successful", { payment: updatedPayment });
-  return updatedPayment;
+  return { message: "ZaloPay payment successful" };
 };
