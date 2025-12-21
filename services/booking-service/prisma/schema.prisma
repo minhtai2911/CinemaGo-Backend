@@ -19,6 +19,7 @@ model Booking {
   userId            String
   type              String
   showtimeId        String
+  cinemaId          String
   totalPrice        Int
   bookingSeats      BookingSeat[]
   createdAt         DateTime           @default(now())

@@ -52,8 +52,8 @@ export const createBooking = asyncHandler(
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { showtimeId, seatIds, foodDrinks } = req.body;
-    if (!showtimeId) {
+    const { showtimeId, seatIds, foodDrinks, cinemaId } = req.body;
+    if (!showtimeId || !cinemaId) {
       return res.status(400).json({ message: "Invalid booking data" });
     }
 
@@ -61,6 +61,7 @@ export const createBooking = asyncHandler(
       req.redisClient,
       userId,
       showtimeId,
+      cinemaId,
       seatIds || [],
       foodDrinks || [],
       type

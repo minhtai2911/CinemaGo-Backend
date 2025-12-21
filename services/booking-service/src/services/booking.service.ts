@@ -72,6 +72,7 @@ export const createBooking = async (
   redisClient: any,
   userId: string | undefined,
   showtimeId: string,
+  cinemaId: string,
   seatIds: string[],
   foodDrinks: { foodDrinkId: string; quantity: number }[],
   type?: string
@@ -150,6 +151,7 @@ export const createBooking = async (
       data: {
         userId,
         showtimeId,
+        cinemaId,
         totalPrice,
         bookingSeats:
           seatIds.length > 0
@@ -189,7 +191,7 @@ export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   const bookingSeats = await prisma.bookingSeat.findMany({
     where: { showtimeId },
   });
-  
+
   logger.info("Fetched booking seats for showtime", {
     showtimeId,
     bookingSeats,
@@ -386,11 +388,13 @@ export const getBookings = async ({
   page,
   limit,
   showtimeId,
+  cinemaId,
   type,
 }: {
   page?: number;
   limit?: number;
   showtimeId?: string;
+  cinemaId?: string;
   type?: string;
 }) => {
   // Fetch bookings with optional filters and pagination
@@ -398,6 +402,7 @@ export const getBookings = async ({
     where: {
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
+      ...(cinemaId ? { cinemaId } : {}),
     },
     include: {
       bookingSeats: true,
@@ -415,6 +420,7 @@ export const getBookings = async ({
     where: {
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
+      ...(cinemaId ? { cinemaId } : {}),
     },
   });
 
