@@ -38,7 +38,6 @@ router.get(
   authorizeRole("ADMIN"),
   BookingController.getBookings
 );
-router.delete("/:id", BookingController.deleteBookingById);
 router.put("/update-status/:id", BookingController.updateBookingStatus);
 
 export default router;
