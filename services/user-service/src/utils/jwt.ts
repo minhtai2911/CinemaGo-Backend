@@ -7,7 +7,8 @@ export const generateTokens = async (
   role: string,
   fullname: string,
   avatarUrl: string,
-  publicId: string
+  publicId: string,
+  cinemaId?: string
 ) => {
   // Create access and refresh tokens
   const accessToken = jwt.sign(
@@ -17,8 +18,9 @@ export const generateTokens = async (
       fullname: fullname,
       avatarUrl: avatarUrl,
       publicId: publicId,
+      ...(cinemaId && { cinemaId }),
     },
-    process.env.ACCESS_TOKEN_SECRET || "defaultAccessTokenSecret",
+    process.env.ACCESS_TOKEN_SECRET as string,
     { expiresIn: "1d" }
   );
 
@@ -26,8 +28,8 @@ export const generateTokens = async (
     {
       userId: userId,
     },
-    process.env.REFRESH_TOKEN_SECRET || "defaultRefreshTokenSecret",
-    { expiresIn: "7d" }
+    process.env.REFRESH_TOKEN_SECRET as string,
+    { expiresIn: "30d" }
   );
   // Check if tokens were generated successfully
   if (!accessToken || !refreshToken) {
@@ -42,7 +44,7 @@ export const generateTokens = async (
     data: {
       userId,
       token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     },
   });
 

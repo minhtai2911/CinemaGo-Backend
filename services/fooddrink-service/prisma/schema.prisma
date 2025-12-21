@@ -23,6 +23,7 @@ model FoodDrink {
   description String
   isAvailable Boolean       @default(true)
   type        FoodDrinkType
+  cinemaId    String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 

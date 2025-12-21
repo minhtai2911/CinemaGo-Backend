@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import * as fooddrinkService from "../services/fooddrink.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getFoodDrinks = asyncHandler(
   async (req: Request, res: Response) => {
-    const { page, limit, search, isAvailable } = req.query;
+    const { page, limit, search, isAvailable, cinemaId } = req.query;
 
     const data = await fooddrinkService.getFoodDrinks({
       page: Number(page) || undefined,
@@ -12,6 +13,7 @@ export const getFoodDrinks = asyncHandler(
       search: search ? String(search) : "",
       isAvailable:
         isAvailable !== undefined ? isAvailable === "true" : undefined,
+      cinemaId: cinemaId ? String(cinemaId) : "",
     });
 
     res.status(200).json({
@@ -40,10 +42,10 @@ export const getFoodDrinkById = asyncHandler(
 
 export const createFoodDrink = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, description, price, type } = req.body;
+    const { name, description, price, type, cinemaId } = req.body;
     const image = req.file?.path;
 
-    if (!name || !description || !price || !type || !image) {
+    if (!name || !description || !price || !type || !image || !cinemaId) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -52,7 +54,8 @@ export const createFoodDrink = asyncHandler(
       description,
       Number(price),
       image,
-      type
+      type,
+      cinemaId
     );
 
     res.status(201).json({ data: foodDrink });
@@ -62,7 +65,7 @@ export const createFoodDrink = asyncHandler(
 export const updateFoodDrinkById = asyncHandler(
   async (req: Request, res: Response) => {
     const foodDrinkId = req.params.id;
-    const { name, description, price, type } = req.body;
+    const { name, description, price, type, cinemaId } = req.body;
     const image = req.file?.path;
 
     const foodDrink = await fooddrinkService.updateFoodDrinkById(foodDrinkId, {
@@ -71,6 +74,7 @@ export const updateFoodDrinkById = asyncHandler(
       price: price ? Number(price) : undefined,
       image,
       type,
+      cinemaId,
     });
 
     res.status(200).json({ data: foodDrink });

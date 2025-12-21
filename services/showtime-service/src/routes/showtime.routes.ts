@@ -13,25 +13,25 @@ router.get("/public/:id", ShowtimeController.getShowtimeById);
 router.post(
   "/",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("MANAGER", "ADMIN"),
   ShowtimeController.createShowtime
 );
 router.put(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("MANAGER", "ADMIN"),
   ShowtimeController.updateShowtimeById
 );
 router.put(
   "/archive/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("MANAGER", "ADMIN"),
   ShowtimeController.archiveShowtimeById
 );
 router.put(
   "/restore/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("MANAGER", "ADMIN"),
   ShowtimeController.restoreShowtimeById
 );
 router.get("/public/batch", ShowtimeController.getShowtimesByIds);

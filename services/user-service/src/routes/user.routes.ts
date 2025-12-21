@@ -18,37 +18,37 @@ router.put(
 router.get(
   "/",
   authenticateRequest,
-  authorizeRole("ADMIN", "EMPLOYEE"),
+  authorizeRole("ADMIN", "EMPLOYEE", "MANAGER"),
   UserController.getUsers
 );
 router.get(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN", "EMPLOYEE"),
+  authorizeRole("ADMIN", "EMPLOYEE", "MANAGER"),
   UserController.getUserById
 );
 router.post(
   "/",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   UserController.createUser
 );
 router.put(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   UserController.updateUserById
 );
 router.put(
   "/:id/archive",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   UserController.archiveUserById
 );
 router.put(
   "/:id/restore",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   UserController.restoreUserById
 );
 router.get(

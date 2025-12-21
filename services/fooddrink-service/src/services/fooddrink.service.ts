@@ -12,11 +12,13 @@ export const getFoodDrinks = async ({
   limit,
   search = "",
   isAvailable,
+  cinemaId,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   isAvailable?: boolean;
+  cinemaId: string;
 }) => {
   // Fetch food and drinks with pagination and search functionality
   const foodDrinks = await prisma.foodDrink.findMany({
@@ -28,6 +30,7 @@ export const getFoodDrinks = async ({
         ],
       }),
       ...(isAvailable !== undefined && { isAvailable }),
+      cinemaId,
     },
     ...(page &&
       limit && {
@@ -46,6 +49,7 @@ export const getFoodDrinks = async ({
         ],
       }),
       ...(isAvailable !== undefined && { isAvailable }),
+      cinemaId,
     },
   });
 
@@ -77,7 +81,8 @@ export const createFoodDrink = async (
   description: string,
   price: number,
   image: string,
-  type: FoodDrinkType
+  type: FoodDrinkType,
+  cinemaId: string
 ) => {
   // Check if a food or drink item with the same name already exists
   const existingFoodDrink = await prisma.foodDrink.findUnique({
@@ -106,6 +111,7 @@ export const createFoodDrink = async (
         image: uploadResult.secure_url,
         publicId: uploadResult.public_id,
         type,
+        cinemaId,
       },
     });
 
@@ -126,6 +132,7 @@ export const updateFoodDrinkById = async (
     price?: number;
     image?: string;
     type?: FoodDrinkType;
+    cinemaId?: string;
   }
 ) => {
   const foodDrink = await prisma.foodDrink.findUnique({
@@ -159,6 +166,7 @@ export const updateFoodDrinkById = async (
       price: data.price || foodDrink.price,
       image: data.image,
       type: data.type || foodDrink.type,
+      cinemaId: data.cinemaId || foodDrink.cinemaId,
     },
   });
 

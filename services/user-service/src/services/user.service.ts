@@ -14,12 +14,14 @@ export const getUsers = async ({
   search = "",
   role,
   isActive,
+  cinemaId,
 }: {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
   isActive?: boolean;
+  cinemaId?: string;
 }) => {
   const users = await prisma.user.findMany({
     where: {
@@ -31,6 +33,7 @@ export const getUsers = async ({
       }),
       ...(role && { role: role as Role }),
       ...(isActive !== undefined ? { isActive } : {}),
+      ...(cinemaId && { cinemaId }),
     },
     ...(page && limit
       ? {
@@ -50,6 +53,7 @@ export const getUsers = async ({
       }),
       ...(role && { role: role as Role }),
       ...(isActive !== undefined ? { isActive } : {}),
+      ...(cinemaId && { cinemaId }),
     },
   });
 
@@ -79,10 +83,16 @@ export const createUser = async (userData: {
   password: string;
   gender: string;
   role: Role;
+  cinemaId: string;
 }) => {
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
-    where: { email: userData.email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: userData.email,
+        isGuest: false,
+      },
+    },
   });
   if (existingUser) {
     logger.warn("User already exists", { email: userData.email });
@@ -105,6 +115,7 @@ export const updateUserById = async (
     password?: string;
     role: Role;
     gender: string;
+    cinemaId: string;
   }
 ) => {
   // Hash the password

@@ -4,7 +4,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, role, isActive } = req.query;
+  const { page, limit, search, role, isActive, cinemaId } = req.query;
 
   const { users, totalItems, totalPages } = await UserService.getUsers({
     page: Number(page) || undefined,
@@ -12,6 +12,7 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     search: search ? String(search) : "",
     role: role ? String(role) : undefined,
     isActive: isActive !== undefined ? isActive === "true" : undefined,
+    cinemaId: cinemaId ? String(cinemaId) : undefined,
   });
 
   res.status(200).json({
@@ -34,8 +35,8 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const { email, fullname, password, role, gender } = req.body;
-  if (!email || !fullname || !password || !role || !gender) {
+  const { email, fullname, password, role, gender, cinemaId } = req.body;
+  if (!email || !fullname || !password || !role || !gender || !cinemaId) {
     return res.status(400).json({ message: "All fields are required" });
   }
   const user = await UserService.createUser({
@@ -44,6 +45,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     password,
     gender,
     role,
+    cinemaId,
   });
   res.status(201).json({ data: user, message: "User created successfully" });
 });
@@ -51,8 +53,8 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 export const updateUserById = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.params.id;
-    const { fullname, role, password, gender } = req.body;
-    if (!fullname || !role || !gender) {
+    const { fullname, role, password, gender, cinemaId } = req.body;
+    if (!fullname || !role || !gender || !cinemaId) {
       return res.status(400).json({ message: "All fields are required" });
     }
     const user = await UserService.updateUserById(userId, {
@@ -60,6 +62,7 @@ export const updateUserById = asyncHandler(
       password,
       role,
       gender,
+      cinemaId,
     });
     res.status(200).json({ data: user, message: "User updated successfully" });
   }

@@ -12,25 +12,25 @@ router.get("/public/:id", RoomController.getRoomById);
 router.post(
   "/",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   RoomController.createRoom
 );
 router.put(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   RoomController.updateRoomById
 );
 router.put(
   "/archive/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   RoomController.archiveRoomById
 );
 router.put(
   "/restore/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   RoomController.restoreRoomById
 );
 router.post("/hold-seat", authenticateRequest, RoomController.holdSeat);

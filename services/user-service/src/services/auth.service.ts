@@ -22,7 +22,12 @@ export const signup = async (
   }
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
   if (existingUser) {
     logger.warn("User already exists", { email });
@@ -62,7 +67,12 @@ export const login = async (
   }
   // Find the user
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
   if (!user) {
     logger.warn("User not found", { email });
@@ -90,7 +100,8 @@ export const login = async (
     user.role,
     user.fullname,
     user.avatarUrl,
-    user.publicId
+    user.publicId,
+    user.cinemaId ? user.cinemaId : undefined
   );
   logger.info("User logged in successfully", {
     userId: user.id,
@@ -132,7 +143,8 @@ export const refreshAccessToken = async (token: string) => {
     decoded.user.role,
     decoded.user.fullname,
     decoded.user.avatarUrl,
-    decoded.user.publicId
+    decoded.user.publicId,
+    decoded.user.cinemaId ? decoded.user.cinemaId : undefined
   );
   logger.info("Access token refreshed successfully", {
     userId: decoded.user.id,
@@ -167,7 +179,12 @@ export const forgotPassword = async (email: string) => {
   }
   // Find the user
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
   if (!user) {
     logger.warn("User not found for password reset", { email });
@@ -223,7 +240,12 @@ export const verifyOtp = async (email: string, otp: string) => {
   }
   // Find the user
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
   if (!user) {
     logger.warn("User not found for OTP verification", { email });
@@ -278,7 +300,12 @@ export const resetPassword = async (
   }
   // Update the user's password
   const user = await prisma.user.update({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
     data: { password: hashedPassword },
   });
   // Delete the OTP record
@@ -297,7 +324,12 @@ export const sendVerificationLink = async (email: string) => {
   }
   // Find the user
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
   if (!user) {
     logger.warn("User not found for verification link", { email });
@@ -426,7 +458,12 @@ export const sendVerifyOtp = async (email: string) => {
 
   // Check user tồn tại
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
 
   if (!user) {
@@ -499,7 +536,12 @@ export const verifyAccountByOtp = async (email: string, otp: string) => {
 
   // Find the user
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: {
+      uniq_users_email_isGuest: {
+        email: email,
+        isGuest: false,
+      },
+    },
   });
 
   if (!user) {

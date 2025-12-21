@@ -13,21 +13,21 @@ router.get("/public/:id", fooddrinkController.getFoodDrinkById);
 router.post(
   "/",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   upload.single("image"),
   fooddrinkController.createFoodDrink
 );
 router.put(
   "/:id",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   upload.single("image"),
   fooddrinkController.updateFoodDrinkById
 );
 router.put(
   "/:id/toggle-availability",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   fooddrinkController.toggleFoodDrinkAvailability
 );
 router.post("/public/by-ids", fooddrinkController.getFoodDrinkByIds);

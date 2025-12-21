@@ -16,7 +16,7 @@ datasource db {
 
 model User {
   id                String              @id @default(uuid())
-  email             String              @unique
+  email             String
   password          String
   fullname          String
   gender            String
@@ -24,12 +24,15 @@ model User {
   avatarUrl         String              @default("")
   publicId          String              @default("")
   isActive          Boolean             @default(false)
+  isGuest           Boolean             @default(false)
+  cinemaId          String?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   refreshTokens     RefreshToken[]
   VerificationToken VerificationToken[]
   OTP               OTP[]
 
+  @@unique([email, isGuest], name: "uniq_users_email_isGuest")
   @@index([email], name: "idx_users_email")
   @@index([role], name: "idx_users_role")
   @@map("users")
@@ -75,4 +78,5 @@ enum Role {
   USER
   ADMIN
   EMPLOYEE
+  MANAGER
 }
