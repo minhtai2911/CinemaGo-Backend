@@ -3,44 +3,6 @@ import * as paymentService from "../services/payment.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 
-export const getPaymentsByUserId = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.user?.userId;
-    const { page, limit } = req.query;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 10;
-
-    const data = await paymentService.getPaymentsByUserId({
-      userId,
-      page: pageNumber,
-      limit: limitNumber,
-    });
-
-    return res.status(200).json({
-      pagination: {
-        totalItems: data.totalItems,
-        totalPages: data.totalPages,
-        currentPage: pageNumber,
-        pageSize: limitNumber > data.totalItems ? data.totalItems : limitNumber,
-        hasNextPage: pageNumber < data.totalPages,
-        hasPrevPage: pageNumber > 1,
-      },
-      data: data.payments,
-    });
-  }
-);
-
-export const getPaymentById = asyncHandler(
-  async (req: Request, res: Response) => {
-    const paymentId = req.params.id;
-    const payment = await paymentService.getPaymentById(paymentId);
-    res.status(200).json({ data: payment });
-  }
-);
-
 export const checkoutWithMoMo = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
@@ -53,19 +15,14 @@ export const checkoutWithMoMo = asyncHandler(
     if (!amount || !bookingId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    const payment = await paymentService.createPayment({
-      userId,
-      amount,
-      bookingId,
-      method,
-    });
 
-    const { payUrl, paymentId } = await paymentService.checkoutWithMoMo({
-      amount,
-      paymentId: payment.id,
-    });
+    const { payUrl, bookingId: returnedBookingId } =
+      await paymentService.checkoutWithMoMo({
+        amount,
+        bookingId,
+      });
 
-    res.status(200).json({ URL: payUrl, paymentId });
+    res.status(200).json({ URL: payUrl, bookingId: returnedBookingId });
   }
 );
 
@@ -78,7 +35,6 @@ export const callbackMoMo = asyncHandler(
     }
 
     const message = await paymentService.callbackMoMo(
-      req.redisClient,
       Number(resultCode),
       String(orderId)
     );
@@ -89,17 +45,15 @@ export const callbackMoMo = asyncHandler(
 
 export const checkStatusTransactionMoMo = asyncHandler(
   async (req: Request, res: Response) => {
-    const paymentId = req.params.id;
+    const bookingId = req.params.id;
 
-    if (!paymentId) {
+    if (!bookingId) {
       return res.status(400).json({ message: "Missing payment ID" });
     }
 
-    const payment = await paymentService.checkStatusTransactionMoMo(
-      req.redisClient,
-      paymentId
-    );
-    res.status(200).json({ data: payment });
+    const message = await paymentService.checkStatusTransactionMoMo(bookingId);
+
+    res.status(200).json(message);
   }
 );
 
@@ -107,7 +61,6 @@ export const checkoutWithVnPay = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
     const { amount, bookingId } = req.body;
-    const method = "VNPAY";
     const ipAddr = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     if (!userId) {
@@ -117,16 +70,9 @@ export const checkoutWithVnPay = asyncHandler(
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const payment = await paymentService.createPayment({
-      userId,
-      amount,
-      bookingId,
-      method,
-    });
-
     const paymentUrl = await paymentService.checkoutWithVnPay({
       amount,
-      paymentId: payment.id,
+      bookingId,
       ipAddr: String(ipAddr),
     });
 
@@ -142,7 +88,8 @@ export const callbackVnPay = asyncHandler(
       return res.status(400).json({ message: "Missing query parameters" });
     }
 
-    const url = await paymentService.callbackVnPay(req.redisClient, rawParams);
+    const url = await paymentService.callbackVnPay(rawParams);
+
     res.redirect(url);
   }
 );
@@ -151,7 +98,6 @@ export const checkoutWithZaloPay = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
     const { amount, bookingId } = req.body;
-    const method = "ZALOPAY";
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -160,16 +106,9 @@ export const checkoutWithZaloPay = asyncHandler(
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const payment = await paymentService.createPayment({
-      userId,
-      amount,
-      bookingId,
-      method,
-    });
-
     const paymentUrl = await paymentService.checkoutWithZaloPay({
       amount,
-      paymentId: payment.id,
+      bookingId,
     });
 
     res.status(200).json({ URL: paymentUrl });
@@ -187,7 +126,6 @@ export const callbackZaloPay = asyncHandler(
     }
 
     const message = await paymentService.callbackZaloPay(
-      req.redisClient,
       app_trans_id,
       amount,
       mac,
@@ -200,12 +138,12 @@ export const callbackZaloPay = asyncHandler(
 export const checkStatusTransactionZaloPay = asyncHandler(
   async (req: Request, res: Response) => {
     const app_trans_id = req.params.id;
+
     if (!app_trans_id) {
       return res.status(400).json({ message: "Missing app_trans_id" });
     }
 
     const payment = await paymentService.checkStatusTransactionZaloPay(
-      req.redisClient,
       app_trans_id
     );
     res.status(200).json({ data: payment });

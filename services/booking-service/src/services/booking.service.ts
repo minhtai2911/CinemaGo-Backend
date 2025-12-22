@@ -7,15 +7,18 @@ export const getBookingsByUserId = async ({
   userId,
   page,
   limit,
+  status,
 }: {
   userId: string;
   page?: number;
   limit?: number;
+  status?: string;
 }) => {
   // Fetch bookings for a specific user with pagination
   const bookings = await prisma.booking.findMany({
     where: {
       userId,
+      ...(status ? { status } : {}),
     },
     include: {
       bookingSeats: true,
@@ -32,6 +35,7 @@ export const getBookingsByUserId = async ({
   const totalItems = await prisma.booking.count({
     where: {
       userId,
+      ...(status ? { status } : {}),
     },
   });
 
@@ -211,6 +215,7 @@ export const getRevenueByPeriod = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     _sum: {
       totalPrice: true,
@@ -256,6 +261,7 @@ export const getRevenueByPeriodAndCinema = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     select: { showtimeId: true, totalPrice: true },
   });
@@ -326,6 +332,7 @@ export const getRevenueByPeriodAndMovie = async (
         ? { createdAt: { gte: startDate, lte: endDate } }
         : {}),
       ...(type ? { type } : {}),
+      status: "Đã thanh toán",
     },
     select: { showtimeId: true, totalPrice: true },
   });
@@ -390,12 +397,14 @@ export const getBookings = async ({
   showtimeId,
   cinemaId,
   type,
+  status,
 }: {
   page?: number;
   limit?: number;
   showtimeId?: string;
   cinemaId?: string;
   type?: string;
+  status?: string;
 }) => {
   // Fetch bookings with optional filters and pagination
   const bookings = await prisma.booking.findMany({
@@ -403,6 +412,7 @@ export const getBookings = async ({
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
       ...(cinemaId ? { cinemaId } : {}),
+      ...(status ? { status } : {}),
     },
     include: {
       bookingSeats: true,
@@ -421,6 +431,7 @@ export const getBookings = async ({
       ...(showtimeId ? { showtimeId } : {}),
       ...(type ? { type } : {}),
       ...(cinemaId ? { cinemaId } : {}),
+      ...(status ? { status } : {}),
     },
   });
 
@@ -436,36 +447,33 @@ export const getBookings = async ({
   };
 };
 
-export const deleteBookingById = async (
+export const updateBookingStatus = async (
   redisClient: any,
-  bookingId: string
+  bookingId: string,
+  status: string,
+  paymentMethod: string
 ) => {
-  return await prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        bookingSeats: true,
-        bookingFoodDrinks: true,
-      },
-    });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      bookingSeats: true,
+    },
+  });
 
-    if (!booking) {
-      logger.warn("Booking not found for deletion", { bookingId });
-      throw new CustomError("Booking not found", 404);
-    }
+  if (!booking) {
+    logger.warn("Booking not found for status update", { bookingId });
+    throw new CustomError("Booking not found", 404);
+  }
 
-    await tx.bookingSeat.deleteMany({
-      where: { bookingId },
-    });
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      status,
+      paymentMethod,
+    },
+  });
 
-    await tx.bookingFoodDrink.deleteMany({
-      where: { bookingId },
-    });
-
-    await tx.booking.delete({
-      where: { id: bookingId },
-    });
-
+  if (status === "Thanh toán thất bại") {
     for (const seat of booking.bookingSeats) {
       await redisClient.publish(
         "seat-update-channel",
@@ -479,9 +487,29 @@ export const deleteBookingById = async (
 
       await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
     }
+  }
 
-    logger.info("Booking deleted successfully", { bookingId });
+  if (status === "Đã thanh toán") {
+    for (const seat of booking.bookingSeats) {
+      await redisClient.publish(
+        "seat-update-channel",
+        JSON.stringify({
+          showtimeId: booking.showtimeId,
+          seatId: seat.seatId,
+          status: "booked",
+          expiresAt: null,
+        })
+      );
 
-    return { success: true };
+      await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
+    }
+  }
+
+  logger.info("Booking status updated successfully", {
+    bookingId,
+    status,
+    paymentMethod,
   });
+
+  return updatedBooking;
 };

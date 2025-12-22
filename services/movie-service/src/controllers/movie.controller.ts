@@ -42,8 +42,15 @@ export const getMovieById = asyncHandler(
 );
 
 export const createMovie = asyncHandler(async (req: Request, res: Response) => {
-  const { title, description, duration, releaseDate, genresIds, trailerPath } =
-    req.body;
+  const {
+    title,
+    description,
+    duration,
+    releaseDate,
+    genresIds,
+    trailerPath,
+    status,
+  } = req.body;
   const genresArray = genresIds
     ? genresIds.split(",").map((g: string) => g.trim())
     : [];
@@ -59,6 +66,7 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     !description ||
     !duration ||
     !releaseDate ||
+    !status ||
     !genresArray ||
     !thumbnail ||
     (!trailerUrl && !trailerPath)
@@ -73,7 +81,8 @@ export const createMovie = asyncHandler(async (req: Request, res: Response) => {
     genresArray,
     thumbnail,
     trailerUrl,
-    trailerPath
+    trailerPath,
+    status
   );
   res.status(201).json({ data: movie });
 });

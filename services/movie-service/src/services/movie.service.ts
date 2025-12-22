@@ -103,7 +103,8 @@ export const createMovie = async (
   genres: string[],
   thumbnail: string,
   trailerUrl: string,
-  trailerPath: string
+  trailerPath: string,
+  status: MovieStatus
 ) => {
   // Check if movie already exists
   const existingMovie = await prisma.movie.findUnique({
@@ -137,6 +138,7 @@ export const createMovie = async (
         description,
         duration,
         releaseDate,
+        status,
         thumbnail: thumbnailUpload.secure_url,
         thumbnailPublicId: thumbnailUpload.public_id,
         trailerUrl: trailerUpload ? trailerUpload.secure_url : trailerPath,
