@@ -1,14 +1,19 @@
 import express from "express";
 import * as PaymentController from "../controllers/payment.controller.js";
-import { authenticateRequest, authorizeRole } from "../middlewares/authMiddleware.js";
+import { authenticateRequest } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/:id", authenticateRequest, PaymentController.getPaymentById);
-router.get("/", authenticateRequest, PaymentController.getPaymentsByUserId);
-router.post("/momo/checkout", authenticateRequest, PaymentController.checkoutWithMoMo);
+router.post(
+  "/momo/checkout",
+  authenticateRequest,
+  PaymentController.checkoutWithMoMo
+);
 router.post("/momo/callback", PaymentController.callbackMoMo);
-router.get("/public/momo/status/:id", PaymentController.checkStatusTransactionMoMo);
+router.get(
+  "/public/momo/status/:id",
+  PaymentController.checkStatusTransactionMoMo
+);
 router.post(
   "/vnpay/checkout",
   authenticateRequest,
