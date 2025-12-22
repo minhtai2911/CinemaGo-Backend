@@ -86,7 +86,7 @@ export const getBookingSeatsByShowtimeId = asyncHandler(
 
 export const getRevenueByPeriod = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate, type } = req.query;
+    const { startDate, endDate, type, cinemaId } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
@@ -94,40 +94,43 @@ export const getRevenueByPeriod = asyncHandler(
     const revenue = await bookingService.getRevenueByPeriod(
       start,
       end,
-      type as string | undefined
+      type as string | undefined,
+      cinemaId as string | undefined
     );
 
     res.status(200).json({ data: revenue });
   }
 );
 
-export const getRevenueByPeriodAndCinema = asyncHandler(
+export const getRevenueAndOccupancyByCinema = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate, type } = req.query;
+    const { startDate, endDate, type, cinemaId } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
 
-    const revenue = await bookingService.getRevenueByPeriodAndCinema(
+    const revenue = await bookingService.getRevenueAndOccupancyByCinema(
       start,
       end,
-      type as string | undefined
+      type as string | undefined,
+      cinemaId as string | undefined
     );
     res.status(200).json({ data: revenue });
   }
 );
 
-export const getRevenueByPeriodAndMovie = asyncHandler(
+export const getRevenueAndOccupancyByMovie = asyncHandler(
   async (req: Request, res: Response) => {
-    const { startDate, endDate, type } = req.query;
+    const { startDate, endDate, type, cinemaId } = req.query;
 
     const start = startDate ? new Date(startDate as string) : undefined;
     const end = endDate ? new Date(endDate as string) : undefined;
 
-    const revenue = await bookingService.getRevenueByPeriodAndMovie(
+    const revenue = await bookingService.getRevenueAndOccupancyByMovie(
       start,
       end,
-      type as string | undefined
+      type as string | undefined,
+      cinemaId as string | undefined
     );
 
     res.status(200).json({ data: revenue });
@@ -135,12 +138,13 @@ export const getRevenueByPeriodAndMovie = asyncHandler(
 );
 
 export const getBookings = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, showtimeId, type, status } = req.query;
+  const { page, limit, showtimeId, type, status, cinemaId } = req.query;
 
   const data = await bookingService.getBookings({
     page: Number(page) || undefined,
     limit: Number(limit) || undefined,
     showtimeId: showtimeId as string | undefined,
+    cinemaId: cinemaId as string | undefined,
     type: type as string | undefined,
     status: status as string | undefined,
   });
@@ -171,5 +175,26 @@ export const updateBookingStatus = asyncHandler(
     );
 
     res.status(200).json({ data: updatedBooking });
+  }
+);
+
+export const getPeakHoursInMonth = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { year, month, cinemaId, type } = req.query;
+
+    if (!year || !month) {
+      return res
+        .status(400)
+        .json({ message: "Year and month are required parameters" });
+    }
+
+    const data = await bookingService.getPeakHoursInMonth(
+      Number(year),
+      Number(month),
+      cinemaId as string | undefined,
+      type as string | undefined
+    );
+
+    res.status(200).json({ data: data });
   }
 );

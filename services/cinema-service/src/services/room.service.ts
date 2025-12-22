@@ -333,3 +333,12 @@ export const releaseSeat = async (
 
   return { message: "Seat released successfully" };
 };
+
+export const getRoomsByIds = async (roomIds: string[]) => {
+  // Fetch multiple rooms by their IDs
+  const rooms = await prisma.room.findMany({
+    where: { id: { in: roomIds } },
+  });
+
+  return rooms;
+};

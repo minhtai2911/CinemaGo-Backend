@@ -40,5 +40,6 @@ router.get(
   RoomController.getHeldSeats
 );
 router.post("/release-seat", authenticateRequest, RoomController.releaseSeat);
+router.post("/public/batch", RoomController.getRoomsByIds);
 
 export default router;

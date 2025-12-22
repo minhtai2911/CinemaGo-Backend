@@ -17,27 +17,33 @@ router.get(
 router.get(
   "/dashboard/revenue",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   BookingController.getRevenueByPeriod
 );
 router.get(
   "/dashboard/revenue/movie",
   authenticateRequest,
-  authorizeRole("ADMIN"),
-  BookingController.getRevenueByPeriodAndMovie
+  authorizeRole("ADMIN", "MANAGER"),
+  BookingController.getRevenueAndOccupancyByMovie
 );
 router.get(
   "/dashboard/revenue/cinema",
   authenticateRequest,
-  authorizeRole("ADMIN"),
-  BookingController.getRevenueByPeriodAndCinema
+  authorizeRole("ADMIN", "MANAGER"),
+  BookingController.getRevenueAndOccupancyByCinema
 );
 router.get(
   "/dashboard/get-all",
   authenticateRequest,
-  authorizeRole("ADMIN"),
+  authorizeRole("ADMIN", "MANAGER"),
   BookingController.getBookings
 );
 router.put("/update-status/:id", BookingController.updateBookingStatus);
+router.get(
+  "/dashboard/peak-hours",
+  authenticateRequest,
+  authorizeRole("ADMIN", "MANAGER"),
+  BookingController.getPeakHoursInMonth
+);
 
 export default router;

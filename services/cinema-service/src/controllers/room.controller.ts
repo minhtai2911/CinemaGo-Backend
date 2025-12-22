@@ -146,3 +146,19 @@ export const releaseSeat = asyncHandler(
     res.status(200).json(message);
   }
 );
+
+export const getRoomsByIds = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { roomIds } = req.body;
+
+    if (!roomIds || !Array.isArray(roomIds) || roomIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "roomIds must be a non-empty array" });
+    }
+
+    const rooms = await roomService.getRoomsByIds(roomIds);
+
+    res.status(200).json({ data: rooms });
+  }
+);
