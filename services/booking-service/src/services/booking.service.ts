@@ -493,7 +493,7 @@ export const getRevenueAndOccupancyByMovie = async (
   const {
     data: { data: rooms },
   } = await axios.post(
-    `${process.env.ROOM_SERVICE_URL}/api/rooms/public/batch`,
+    `${process.env.CINEMA_SERVICE_URL}/api/rooms/public/batch`,
     { roomIds }
   );
 
