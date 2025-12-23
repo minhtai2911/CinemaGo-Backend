@@ -19,7 +19,7 @@ export const checkoutWithMoMo = async ({
   const orderInfo = "Checkout with MoMo";
   const partnerCode = "MOMO";
   const redirectUrl =
-    (process.env.URL_CHECKOUT_COMPLETED as string) || urlCheckoutCompleted;
+    urlCheckoutCompleted || (process.env.URL_CHECKOUT_COMPLETED as string);
   const ipnUrl = `${process.env.LINK_NGROK}/v1/payments/momo/callback`;
   const requestType = "payWithMethod";
   const orderId = bookingId;
