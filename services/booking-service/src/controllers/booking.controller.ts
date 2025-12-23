@@ -189,8 +189,8 @@ export const getPeakHoursInMonth = asyncHandler(
     }
 
     const data = await bookingService.getPeakHoursInMonth(
-      Number(year),
       Number(month),
+      Number(year),
       cinemaId as string | undefined,
       type as string | undefined
     );

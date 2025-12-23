@@ -760,7 +760,7 @@ export const getPeakHoursInMonth = async (
       continue;
     }
 
-    const hour = startTime.getHours();
+    const hour = (startTime.getHours() + 7) % 24;
     hourlyCount[hour] += booking.bookingSeats.length;
   }
 
