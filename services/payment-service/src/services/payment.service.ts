@@ -7,16 +7,19 @@ import moment from "moment";
 export const checkoutWithMoMo = async ({
   amount,
   bookingId,
+  urlCheckoutCompleted,
 }: {
   amount: number;
   bookingId: string;
+  urlCheckoutCompleted?: string;
 }) => {
   // Prepare the MoMo payment request
   const accessKey = process.env.ACCESS_KEY_MOMO as string;
   const secretKey = process.env.SECRET_KEY_MOMO as string;
   const orderInfo = "Checkout with MoMo";
   const partnerCode = "MOMO";
-  const redirectUrl = process.env.URL_CHECKOUT_COMPLETED as string;
+  const redirectUrl =
+    (process.env.URL_CHECKOUT_COMPLETED as string) || urlCheckoutCompleted;
   const ipnUrl = `${process.env.LINK_NGROK}/v1/payments/momo/callback`;
   const requestType = "payWithMethod";
   const orderId = bookingId;

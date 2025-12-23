@@ -6,8 +6,7 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware.js";
 export const checkoutWithMoMo = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const { amount, bookingId } = req.body;
-    const method = "MOMO";
+    const { amount, bookingId, urlCheckoutCompleted } = req.body;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -20,6 +19,7 @@ export const checkoutWithMoMo = asyncHandler(
       await paymentService.checkoutWithMoMo({
         amount,
         bookingId,
+        urlCheckoutCompleted: urlCheckoutCompleted || undefined,
       });
 
     res.status(200).json({ URL: payUrl, bookingId: returnedBookingId });
