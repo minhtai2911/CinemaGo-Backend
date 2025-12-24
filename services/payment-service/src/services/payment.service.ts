@@ -176,10 +176,12 @@ export const checkoutWithVnPay = async ({
   amount,
   bookingId,
   ipAddr,
+  urlCheckoutCompleted,
 }: {
   amount: number;
   bookingId: string;
   ipAddr: string;
+  urlCheckoutCompleted?: string;
 }) => {
   // Prepare the VnPay payment request
   const orderId = bookingId;
@@ -188,7 +190,9 @@ export const checkoutWithVnPay = async ({
   const bankCode = "NCB";
 
   const vnpUrl = process.env.VNP_URL as string;
-  const vnpReturnUrl = `${process.env.LINK_NGROK}/v1/payments/vnpay/callback`;
+  const vnpReturnUrl =
+    urlCheckoutCompleted ||
+    `${process.env.LINK_NGROK}/v1/payments/vnpay/callback`;
   const vnpTmnCode = process.env.VNP_TMN_CODE as string;
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
 
@@ -288,9 +292,11 @@ export const callbackVnPay = async (rawParams: Record<string, string>) => {
 export const checkoutWithZaloPay = async ({
   amount,
   bookingId,
+  urlCheckoutCompleted,
 }: {
   amount: number;
   bookingId: string;
+  urlCheckoutCompleted?: string;
 }) => {
   // Prepare the ZaloPay payment request
   const app_id = process.env.APP_ID_ZALOPAY as string;
@@ -299,7 +305,8 @@ export const checkoutWithZaloPay = async ({
 
   // Embed data to redirect after payment completion
   const embed_data = {
-    redirectUrl: process.env.URL_CHECKOUT_COMPLETED as string,
+    redirectUrl:
+      urlCheckoutCompleted || (process.env.URL_CHECKOUT_COMPLETED as string),
   };
 
   // Create the transaction ID

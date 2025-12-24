@@ -60,7 +60,7 @@ export const checkStatusTransactionMoMo = asyncHandler(
 export const checkoutWithVnPay = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const { amount, bookingId } = req.body;
+    const { amount, bookingId, urlCheckoutCompleted } = req.body;
     const ipAddr = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     if (!userId) {
@@ -74,6 +74,7 @@ export const checkoutWithVnPay = asyncHandler(
       amount,
       bookingId,
       ipAddr: String(ipAddr),
+      urlCheckoutCompleted: urlCheckoutCompleted || undefined,
     });
 
     res.status(200).json({ URL: paymentUrl });
@@ -97,7 +98,7 @@ export const callbackVnPay = asyncHandler(
 export const checkoutWithZaloPay = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.userId;
-    const { amount, bookingId } = req.body;
+    const { amount, bookingId, urlCheckoutCompleted } = req.body;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -109,6 +110,7 @@ export const checkoutWithZaloPay = asyncHandler(
     const paymentUrl = await paymentService.checkoutWithZaloPay({
       amount,
       bookingId,
+      urlCheckoutCompleted: urlCheckoutCompleted || undefined,
     });
 
     res.status(200).json({ URL: paymentUrl });
