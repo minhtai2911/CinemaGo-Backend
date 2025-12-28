@@ -87,12 +87,7 @@ export const createUser = async (userData: {
 }) => {
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
-    where: {
-      uniq_users_email_isGuest: {
-        email: userData.email,
-        isGuest: false,
-      },
-    },
+    where: { email: userData.email },
   });
   if (existingUser) {
     logger.warn("User already exists", { email: userData.email });
