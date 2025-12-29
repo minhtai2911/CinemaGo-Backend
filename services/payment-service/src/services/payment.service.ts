@@ -7,16 +7,18 @@ import moment from "moment";
 export const checkoutWithMoMo = async ({
   amount,
   bookingId,
+  urlCompleted,
 }: {
   amount: number;
   bookingId: string;
+  urlCompleted: string;
 }) => {
   // Prepare the MoMo payment request
   const accessKey = process.env.ACCESS_KEY_MOMO as string;
   const secretKey = process.env.SECRET_KEY_MOMO as string;
   const orderInfo = "Checkout with MoMo";
   const partnerCode = "MOMO";
-  const redirectUrl = process.env.URL_CHECKOUT_COMPLETED as string;
+  const redirectUrl = urlCompleted;
   const ipnUrl = `${process.env.LINK_NGROK}/v1/payments/momo/callback`;
   const requestType = "payWithMethod";
   const orderId = bookingId;
@@ -173,10 +175,12 @@ export const checkoutWithVnPay = async ({
   amount,
   bookingId,
   ipAddr,
+  urlCompleted,
 }: {
   amount: number;
   bookingId: string;
   ipAddr: string;
+  urlCompleted: string;
 }) => {
   // Prepare the VnPay payment request
   const orderId = bookingId;
@@ -185,7 +189,11 @@ export const checkoutWithVnPay = async ({
   const bankCode = "NCB";
 
   const vnpUrl = process.env.VNP_URL as string;
-  const vnpReturnUrl = `${process.env.LINK_NGROK}/v1/payments/vnpay/callback`;
+  const vnpReturnUrl = `${
+    process.env.LINK_NGROK
+  }/v1/payments/vnpay/callback?urlCompleted=${encodeURIComponent(
+    urlCompleted
+  )}`;
   const vnpTmnCode = process.env.VNP_TMN_CODE as string;
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
 
@@ -227,7 +235,10 @@ export const checkoutWithVnPay = async ({
   return url;
 };
 
-export const callbackVnPay = async (rawParams: Record<string, string>) => {
+export const callbackVnPay = async (
+  rawParams: Record<string, string>,
+  urlCompleted: string
+) => {
   const vnpHashSecret = process.env.VNP_HASH_SECRET as string;
   const secureHash = rawParams["vnp_SecureHash"];
   const responseCode = rawParams["vnp_ResponseCode"];
@@ -238,6 +249,7 @@ export const callbackVnPay = async (rawParams: Record<string, string>) => {
   const vnpParams: Record<string, string> = { ...rawParams };
   delete vnpParams["vnp_SecureHash"];
   delete vnpParams["vnp_SecureHashType"];
+  delete vnpParams["urlCompleted"];
 
   // Sort the parameters alphabetically
   const sortedParams = Object.keys(vnpParams)
@@ -279,15 +291,17 @@ export const callbackVnPay = async (rawParams: Record<string, string>) => {
     { status: "Đã thanh toán", paymentMethod: "VnPay" }
   );
 
-  return `${process.env.URL_CHECKOUT_COMPLETED}?status=success&bookingId=${bookingId}`;
+  return `${urlCompleted}?status=success&bookingId=${bookingId}`;
 };
 
 export const checkoutWithZaloPay = async ({
   amount,
   bookingId,
+  urlCompleted,
 }: {
   amount: number;
   bookingId: string;
+  urlCompleted: string;
 }) => {
   // Prepare the ZaloPay payment request
   const app_id = process.env.APP_ID_ZALOPAY as string;
@@ -296,7 +310,7 @@ export const checkoutWithZaloPay = async ({
 
   // Embed data to redirect after payment completion
   const embed_data = {
-    redirectUrl: process.env.URL_CHECKOUT_COMPLETED as string,
+    redirectUrl: urlCompleted,
   };
 
   // Create the transaction ID
