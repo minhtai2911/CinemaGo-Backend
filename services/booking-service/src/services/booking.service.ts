@@ -218,7 +218,7 @@ export const getRevenueByPeriod = async (
     ...(cinemaId ? { cinemaId } : {}),
   };
 
-  const ticketRevenue = await prisma.booking.aggregate({
+  const revenue = await prisma.booking.aggregate({
     where: whereClause,
     _sum: { totalPrice: true },
   });
@@ -230,9 +230,9 @@ export const getRevenueByPeriod = async (
     _sum: { totalPrice: true },
   });
 
-  const totalTicketRevenue = ticketRevenue._sum.totalPrice || 0;
+  const totalRevenue = revenue._sum.totalPrice || 0;
   const totalFoodDrinkRevenue = foodDrinkRevenue._sum.totalPrice || 0;
-  const totalRevenue = totalTicketRevenue + totalFoodDrinkRevenue;
+  const totalTicketRevenue = totalRevenue - totalFoodDrinkRevenue;
 
   logger.info("Revenue by period calculated", {
     startDate,
@@ -299,7 +299,7 @@ export const getRevenueAndOccupancyByCinema = async (
   const cinemaStats = new Map<
     string,
     {
-      ticketRevenue: number;
+      revenue: number;
       foodDrinkRevenue: number;
       bookedSeats: number;
     }
@@ -319,7 +319,7 @@ export const getRevenueAndOccupancyByCinema = async (
     const cid = showtimeInfo.cinemaId;
 
     const current = cinemaStats.get(cid) || {
-      ticketRevenue: 0,
+      revenue: 0,
       foodDrinkRevenue: 0,
       bookedSeats: 0,
     };
@@ -330,7 +330,7 @@ export const getRevenueAndOccupancyByCinema = async (
     );
 
     cinemaStats.set(cid, {
-      ticketRevenue: current.ticketRevenue + booking.totalPrice,
+      revenue: current.revenue + booking.totalPrice,
       foodDrinkRevenue: current.foodDrinkRevenue + fnbRevenue,
       bookedSeats: current.bookedSeats + booking.bookingSeats.length,
     });
@@ -389,9 +389,9 @@ export const getRevenueAndOccupancyByCinema = async (
 
     return {
       cinema: cinemaMap.get(cid),
-      ticketRevenue: stats.ticketRevenue,
+      totalRevenue: stats.revenue,
       foodDrinkRevenue: stats.foodDrinkRevenue,
-      totalRevenue: stats.ticketRevenue + stats.foodDrinkRevenue,
+      ticketRevenue: stats.revenue - stats.foodDrinkRevenue,
       bookedSeats: stats.bookedSeats,
       totalSeats,
       occupancyRate: Number(occupancyRate.toFixed(2)),
@@ -455,7 +455,7 @@ export const getRevenueAndOccupancyByMovie = async (
   const movieStats = new Map<
     string,
     {
-      ticketRevenue: number;
+      revenue: number;
       foodDrinkRevenue: number;
       bookedSeats: number;
     }
@@ -471,7 +471,7 @@ export const getRevenueAndOccupancyByMovie = async (
     const { movieId } = info;
 
     const current = movieStats.get(movieId) || {
-      ticketRevenue: 0,
+      revenue: 0,
       foodDrinkRevenue: 0,
       bookedSeats: 0,
     };
@@ -482,7 +482,7 @@ export const getRevenueAndOccupancyByMovie = async (
     );
 
     movieStats.set(movieId, {
-      ticketRevenue: current.ticketRevenue + booking.totalPrice,
+      revenue: current.revenue + booking.totalPrice,
       foodDrinkRevenue: current.foodDrinkRevenue + fnbRevenue,
       bookedSeats: current.bookedSeats + booking.bookingSeats.length,
     });
@@ -533,9 +533,9 @@ export const getRevenueAndOccupancyByMovie = async (
 
     return {
       movie: movieMap.get(movieId),
-      ticketRevenue: stats.ticketRevenue,
+      totalRevenue: stats.revenue,
       foodDrinkRevenue: stats.foodDrinkRevenue,
-      totalRevenue: stats.ticketRevenue + stats.foodDrinkRevenue,
+      ticketRevenue: stats.revenue - stats.foodDrinkRevenue,
       bookedSeats: stats.bookedSeats,
       totalSeats,
       occupancyRate: Number(occupancyRate.toFixed(2)),
@@ -580,6 +580,7 @@ export const getBookings = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
   // Count total bookings for pagination
   const totalItems = await prisma.booking.count({
@@ -809,4 +810,29 @@ export const getPeakHoursInMonth = async (
   });
 
   return result;
+};
+
+export const maskBookingAsUsed = async (
+  showtimeId: string,
+  bookingId: string
+) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId, showtimeId },
+  });
+
+  if (!booking) {
+    logger.warn("Booking not found for masking", { bookingId });
+    throw new CustomError("Booking not found", 404);
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      isUsed: true,
+    },
+  });
+
+  logger.info("Booking masked as used successfully", { bookingId });
+
+  return updatedBooking;
 };

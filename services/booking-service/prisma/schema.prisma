@@ -24,6 +24,7 @@ model Booking {
   status            String             @default("Chưa thanh toán")
   paymentMethod     String             @default("COD")
   bookingSeats      BookingSeat[]
+  isUsed            Boolean            @default(false)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   bookingFoodDrinks BookingFoodDrink[]

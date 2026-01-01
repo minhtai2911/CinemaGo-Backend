@@ -46,7 +46,7 @@ export const createBooking = asyncHandler(
     const role = req.user?.role;
     let type = "online";
 
-    if (role !== "user") {
+    if (role !== "USER") {
       type = "offline";
     }
 
@@ -196,5 +196,24 @@ export const getPeakHoursInMonth = asyncHandler(
     );
 
     res.status(200).json({ data: data });
+  }
+);
+
+export const maskBookingAsUsed = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { bookingId, showtimeId } = req.body;
+
+    if (!bookingId || !showtimeId) {
+      return res
+        .status(400)
+        .json({ message: "Booking ID and Showtime ID are required" });
+    }
+
+    const updatedBooking = await bookingService.maskBookingAsUsed(
+      bookingId,
+      showtimeId
+    );
+
+    res.status(200).json({ data: updatedBooking });
   }
 );

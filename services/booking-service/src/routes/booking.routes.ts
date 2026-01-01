@@ -45,5 +45,11 @@ router.get(
   authorizeRole("ADMIN", "MANAGER"),
   BookingController.getPeakHoursInMonth
 );
+router.post(
+  "/verify-booking",
+  authenticateRequest,
+  authorizeRole("ADMIN", "MANAGER", "EMPLOYEE"),
+  BookingController.maskBookingAsUsed
+);
 
 export default router;
