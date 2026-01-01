@@ -398,6 +398,8 @@ export const getTopRatedMovies = async (limit: number) => {
       rating: {
         gt: 0,
       },
+      isActive: true,
+      status: MovieStatus.NOW_SHOWING,
     },
     orderBy: { rating: "desc" },
     take: limit,
