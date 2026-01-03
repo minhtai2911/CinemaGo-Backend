@@ -47,7 +47,10 @@ const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
   path: "/socket.io",
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [process.env.URL_USER as string, process.env.URL_ADMIN as string]
+        : ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -125,7 +128,10 @@ subscriber.on("message", (channel, message) => {
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [process.env.URL_USER as string, process.env.URL_ADMIN as string]
+        : ["http://localhost:3000", "http://localhost:3001"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
