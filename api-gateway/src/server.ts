@@ -50,7 +50,12 @@ const io = new SocketIOServer(httpServer, {
     origin:
       process.env.NODE_ENV === "production"
         ? [process.env.URL_USER as string, process.env.URL_ADMIN as string]
-        : ["http://localhost:3000", "http://localhost:3001"],
+        : [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            process.env.URL_USER as string,
+            process.env.URL_ADMIN as string,
+          ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   },
@@ -131,7 +136,12 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? [process.env.URL_USER as string, process.env.URL_ADMIN as string]
-        : ["http://localhost:3000", "http://localhost:3001"],
+        : [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            process.env.URL_USER as string,
+            process.env.URL_ADMIN as string,
+          ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
