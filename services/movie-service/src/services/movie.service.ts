@@ -17,6 +17,8 @@ export const getMovies = async ({
   genreIds,
   rating,
   status,
+  sortBy,
+  sortOrder,
 }: {
   page?: number;
   limit?: number;
@@ -25,6 +27,8 @@ export const getMovies = async ({
   genreIds?: string[];
   rating?: number;
   status?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }) => {
   // Fetch movies with pagination, search, genre filter, and rating filter
   const where: any = {};
@@ -57,7 +61,7 @@ export const getMovies = async ({
         where: { isActive: true },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: sortBy ? { [sortBy]: sortOrder || "asc" } : { createdAt: "desc" },
     ...(page && limit
       ? {
           skip: (page - 1) * limit,
