@@ -3,8 +3,17 @@ import * as MovieService from "../services/movie.service.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getMovies = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, search, rating, genreQuery, isActive, status } =
-    req.query;
+  const {
+    page,
+    limit,
+    search,
+    rating,
+    genreQuery,
+    isActive,
+    status,
+    sortBy,
+    sortOrder,
+  } = req.query;
   let genreIds: string[] = [];
   if (genreQuery) {
     genreIds = (genreQuery as string).split(",").map((id: string) => id.trim());
@@ -18,6 +27,8 @@ export const getMovies = asyncHandler(async (req: Request, res: Response) => {
     rating: rating ? Number(rating) : undefined,
     isActive: isActive ? isActive === "true" : undefined,
     status: status ? String(status) : undefined,
+    sortBy: sortBy ? String(sortBy) : undefined,
+    sortOrder: sortOrder ? String(sortOrder) : undefined,
   });
 
   res.status(200).json({
