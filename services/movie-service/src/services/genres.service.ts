@@ -58,17 +58,24 @@ export const getGenreById = async (genreId: string) => {
 
 export const createGenre = async (name: string, description: string) => {
   // Check if genre already exists
-  const existingGenre = await prisma.genres.findUnique({
-    where: { name },
+  const existingGenre = await prisma.genres.findFirst({
+    where: {
+      name: {
+        equals: name.trim(),
+        mode: "insensitive",
+      },
+    },
   });
+
   if (existingGenre) {
     logger.warn("Genre already exists", { name });
     throw new CustomError("Genre already exists", 409);
   }
   // Create new genre
   const genre = await prisma.genres.create({
-    data: { name, description },
+    data: { name: name.trim(), description },
   });
+
   logger.info("Created genre", { genre });
   return genre;
 };
