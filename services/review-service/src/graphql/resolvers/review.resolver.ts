@@ -126,6 +126,9 @@ export const reviewResolver = {
         ratingDistribution,
       };
     },
+    healthCheck: async () => {
+      return { status: "ok", timestamp: new Date().toISOString() };
+    },
   },
 
   Mutation: {

@@ -18,3 +18,7 @@ export const sendNotificationEmail = asyncHandler(
     res.status(200).json(message);
   }
 );
+
+export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});

@@ -217,3 +217,7 @@ export const maskBookingAsUsed = asyncHandler(
     res.status(200).json({ data: updatedBooking });
   }
 );
+
+export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});

@@ -40,5 +40,6 @@ router.get(
   cinemaController.getTotalCinemasCount
 );
 router.post("/public/batch", cinemaController.getCinemasByIds);
+router.get("/public/health-check", cinemaController.healthCheck);
 
 export default router;

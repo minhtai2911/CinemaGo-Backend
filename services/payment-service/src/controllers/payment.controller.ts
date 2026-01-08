@@ -153,3 +153,7 @@ export const checkStatusTransactionZaloPay = asyncHandler(
     res.status(200).json({ data: payment });
   }
 );
+
+export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});

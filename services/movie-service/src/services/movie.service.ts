@@ -28,7 +28,7 @@ export const getMovies = async ({
   rating?: number;
   status?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: string;
 }) => {
   // Fetch movies with pagination, search, genre filter, and rating filter
   const where: any = {};

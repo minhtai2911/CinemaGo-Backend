@@ -31,5 +31,6 @@ router.put(
   fooddrinkController.toggleFoodDrinkAvailability
 );
 router.post("/public/by-ids", fooddrinkController.getFoodDrinkByIds);
+router.get("/public/health-check", fooddrinkController.healthCheck);
 
 export default router;

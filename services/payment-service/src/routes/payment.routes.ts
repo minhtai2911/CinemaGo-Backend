@@ -30,5 +30,6 @@ router.get(
   "/public/zalopay/status/:id",
   PaymentController.checkStatusTransactionZaloPay
 );
+router.get("/public/health-check", PaymentController.healthCheck);
 
 export default router;

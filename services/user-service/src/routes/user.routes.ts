@@ -57,5 +57,6 @@ router.get(
   authorizeRole("ADMIN"),
   UserController.getTotalUsersCount
 );
+router.get("/public/health-check", UserController.healthCheck);
 
 export default router;

@@ -35,5 +35,6 @@ router.put(
   ShowtimeController.restoreShowtimeById
 );
 router.post("/public/batch", ShowtimeController.getShowtimesByIds);
+router.get("/public/health-check", ShowtimeController.healthCheck);
 
 export default router;

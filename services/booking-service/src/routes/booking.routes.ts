@@ -51,5 +51,6 @@ router.post(
   authorizeRole("ADMIN", "MANAGER", "EMPLOYEE"),
   BookingController.maskBookingAsUsed
 );
+router.get("/public/health-check", BookingController.healthCheck);
 
 export default router;

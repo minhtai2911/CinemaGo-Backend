@@ -51,5 +51,6 @@ router.get(
 );
 router.post("/public/batch", MovieController.getMoviesByIds);
 router.post("/calculate-movie-rating", MovieController.calculateMovieRating);
+router.get("/public/health-check", MovieController.healthCheck);
 
 export default router;
