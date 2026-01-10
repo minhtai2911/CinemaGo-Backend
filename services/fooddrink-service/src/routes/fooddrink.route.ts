@@ -8,6 +8,7 @@ import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
+router.get("/public/health-check", fooddrinkController.healthCheck);
 router.get("/public", fooddrinkController.getFoodDrinks);
 router.get("/public/:id", fooddrinkController.getFoodDrinkById);
 router.post(
@@ -31,6 +32,5 @@ router.put(
   fooddrinkController.toggleFoodDrinkAvailability
 );
 router.post("/public/by-ids", fooddrinkController.getFoodDrinkByIds);
-router.get("/public/health-check", fooddrinkController.healthCheck);
 
 export default router;

@@ -4,6 +4,7 @@ import { authenticateRequest } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
+router.get("/public/health-check", PaymentController.healthCheck);
 router.post(
   "/momo/checkout",
   authenticateRequest,
@@ -30,6 +31,5 @@ router.get(
   "/public/zalopay/status/:id",
   PaymentController.checkStatusTransactionZaloPay
 );
-router.get("/public/health-check", PaymentController.healthCheck);
 
 export default router;

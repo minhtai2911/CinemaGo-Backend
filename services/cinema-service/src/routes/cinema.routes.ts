@@ -7,6 +7,7 @@ import {
 
 const router = express.Router();
 
+router.get("/public/health-check", cinemaController.healthCheck);
 router.get("/public", cinemaController.getCinemas);
 router.get("/public/:id", cinemaController.getCinemaById);
 router.post(
@@ -40,6 +41,5 @@ router.get(
   cinemaController.getTotalCinemasCount
 );
 router.post("/public/batch", cinemaController.getCinemasByIds);
-router.get("/public/health-check", cinemaController.healthCheck);
 
 export default router;

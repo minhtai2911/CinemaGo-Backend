@@ -7,6 +7,7 @@ import {
 
 const router = express.Router();
 
+router.get("/public/health-check", ShowtimeController.healthCheck);
 router.get("/public", ShowtimeController.getShowtimes);
 router.get("/public/get-busy-rooms", ShowtimeController.getBusyRoomIds);
 router.get("/public/:id", ShowtimeController.getShowtimeById);
@@ -35,6 +36,5 @@ router.put(
   ShowtimeController.restoreShowtimeById
 );
 router.post("/public/batch", ShowtimeController.getShowtimesByIds);
-router.get("/public/health-check", ShowtimeController.healthCheck);
 
 export default router;

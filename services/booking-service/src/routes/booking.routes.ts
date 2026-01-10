@@ -7,6 +7,7 @@ import {
 
 const router = express.Router();
 
+router.get("/public/health-check", BookingController.healthCheck);
 router.get("/", authenticateRequest, BookingController.getBookingsByUserId);
 router.get("/:id", BookingController.getBookingById);
 router.post("/", authenticateRequest, BookingController.createBooking);
@@ -51,6 +52,5 @@ router.post(
   authorizeRole("ADMIN", "MANAGER", "EMPLOYEE"),
   BookingController.maskBookingAsUsed
 );
-router.get("/public/health-check", BookingController.healthCheck);
 
 export default router;

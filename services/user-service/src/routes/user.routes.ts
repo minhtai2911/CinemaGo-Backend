@@ -8,6 +8,7 @@ import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
+router.get("/public/health-check", UserController.healthCheck);
 router.get("/profile", authenticateRequest, UserController.getProfile);
 router.put(
   "/profile",
@@ -57,6 +58,5 @@ router.get(
   authorizeRole("ADMIN"),
   UserController.getTotalUsersCount
 );
-router.get("/public/health-check", UserController.healthCheck);
 
 export default router;

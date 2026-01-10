@@ -30,19 +30,18 @@ const server = new ApolloServer({
 await server.start();
 
 app.use(
+  "/api/reviews/public/health-check",
+  async (req: express.Request, res: express.Response) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  }
+);
+app.use(
   "/api/reviews",
   expressMiddleware(server, {
     context: async ({ req }) => {
       return buildContext({ req });
     },
   })
-);
-
-app.use(
-  "/api/reviews/public/health-check",
-  async (req: express.Request, res: express.Response) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-  }
 );
 
 app.use(errorHandler);
