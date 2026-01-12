@@ -37,6 +37,7 @@ export const getFoodDrinks = async ({
         skip: (page - 1) * limit,
         take: limit,
       }),
+    orderBy: { createdAt: "desc" },
   });
 
   // Count total items for pagination
@@ -86,7 +87,9 @@ export const createFoodDrink = async (
 ) => {
   // Check if a food or drink item with the same name already exists
   const existingFoodDrink = await prisma.foodDrink.findUnique({
-    where: { name },
+    where: {
+      unique_fooddrink_per_cinema: { name, cinemaId },
+    },
   });
 
   // If it exists, throw a conflict error

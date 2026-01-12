@@ -56,6 +56,7 @@ export const getShowtimes = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
   // Count total items for pagination
   const totalItems = await prisma.showtime.count({ where });

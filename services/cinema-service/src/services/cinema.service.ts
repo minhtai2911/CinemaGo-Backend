@@ -28,6 +28,7 @@ export const getCinemas = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
   // Count total items for pagination
   const totalItems = await prisma.cinema.count({

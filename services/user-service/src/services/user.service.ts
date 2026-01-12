@@ -41,6 +41,7 @@ export const getUsers = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
 
   const totalItems = await prisma.user.count({

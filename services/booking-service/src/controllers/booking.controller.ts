@@ -15,7 +15,7 @@ export const getBookingsByUserId = asyncHandler(
       userId,
       page: Number(page) || undefined,
       limit: Number(limit) || undefined,
-      status: status as string | undefined,
+      status: status as string || "Đã thanh toán",
     });
 
     res.status(200).json({
@@ -201,18 +201,15 @@ export const getPeakHoursInMonth = asyncHandler(
 
 export const maskBookingAsUsed = asyncHandler(
   async (req: Request, res: Response) => {
-    const { bookingId, showtimeId } = req.body;
+    const { bookingId } = req.body;
 
-    if (!bookingId || !showtimeId) {
+    if (!bookingId) {
       return res
         .status(400)
         .json({ message: "Booking ID and Showtime ID are required" });
     }
 
-    const updatedBooking = await bookingService.maskBookingAsUsed(
-      bookingId,
-      showtimeId
-    );
+    const updatedBooking = await bookingService.maskBookingAsUsed(bookingId);
 
     res.status(200).json({ data: updatedBooking });
   }

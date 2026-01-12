@@ -12,13 +12,13 @@ export const getBookingsByUserId = async ({
   userId: string;
   page?: number;
   limit?: number;
-  status?: string;
+  status: string;
 }) => {
   // Fetch bookings for a specific user with pagination
   const bookings = await prisma.booking.findMany({
     where: {
       userId,
-      ...(status ? { status } : {}),
+      status,
     },
     include: {
       bookingSeats: true,
@@ -30,6 +30,7 @@ export const getBookingsByUserId = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
   // Count total bookings for pagination
   const totalItems = await prisma.booking.count({
@@ -1046,12 +1047,9 @@ export const getPeakHoursInMonth = async (
   return result;
 };
 
-export const maskBookingAsUsed = async (
-  showtimeId: string,
-  bookingId: string
-) => {
+export const maskBookingAsUsed = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
-    where: { id: bookingId, showtimeId },
+    where: { id: bookingId },
   });
 
   if (!booking) {

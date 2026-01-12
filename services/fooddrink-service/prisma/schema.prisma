@@ -16,7 +16,7 @@ datasource db {
 
 model FoodDrink {
   id          String        @id @default(uuid())
-  name        String        @unique
+  name        String
   price       Int
   image       String
   publicId    String
@@ -27,6 +27,7 @@ model FoodDrink {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  @@unique([name, cinemaId], name: "unique_fooddrink_per_cinema")
   @@map("food_drinks")
 }
 

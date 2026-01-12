@@ -61,6 +61,7 @@ export const getRooms = async ({
           take: limit,
         }
       : {}),
+    orderBy: { createdAt: "desc" },
   });
   // Count total items for pagination
   const totalItems = await prisma.room.count({
