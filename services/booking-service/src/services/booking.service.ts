@@ -194,7 +194,7 @@ export const createBooking = async (
 export const getBookingSeatsByShowtimeId = async (showtimeId: string) => {
   // Fetch all booking seats for a specific showtime
   const bookingSeats = await prisma.bookingSeat.findMany({
-    where: { showtimeId },
+    where: { showtimeId, booking: { status: "Đã thanh toán" } },
   });
 
   logger.info("Fetched booking seats for showtime", {
