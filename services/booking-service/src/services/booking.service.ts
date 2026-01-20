@@ -80,7 +80,7 @@ export const createBooking = async (
   cinemaId: string,
   seatIds: string[],
   foodDrinks: { foodDrinkId: string; quantity: number }[],
-  type?: string
+  type?: string,
 ) => {
   let totalPrice: number = 0;
   for (const seatId of seatIds) {
@@ -103,7 +103,7 @@ export const createBooking = async (
       throw new CustomError("Seat is already held by another user", 400);
     }
     const showtime = await axios.get(
-      `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/${showtimeId}`
+      `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/${showtimeId}`,
     );
     // Check if the showtime exists
     if (!showtime || !showtime.data || !showtime.data.data) {
@@ -124,7 +124,7 @@ export const createBooking = async (
 
     const response = await axios.post(
       `${process.env.FOOD_DRINK_SERVICE_URL}/api/food-drinks/public/by-ids`,
-      { ids: foodDrinkIds }
+      { ids: foodDrinkIds },
     );
 
     const foodDrinkList = response?.data?.data || [];
@@ -132,7 +132,7 @@ export const createBooking = async (
     bookingFoodDrinksData = foodDrinks.map((item) => {
       const foodInfo = foodDrinkList.find(
         (foodDrink: { id: string; price: number }) =>
-          foodDrink.id === item.foodDrinkId
+          foodDrink.id === item.foodDrinkId,
       );
 
       if (!foodInfo) {
@@ -208,7 +208,7 @@ export const getRevenueByPeriod = async (
   startDate?: Date,
   endDate?: Date,
   type?: string,
-  cinemaId?: string
+  cinemaId?: string,
 ) => {
   const where = {
     status: "Đã thanh toán",
@@ -257,7 +257,7 @@ export const getRevenueByPeriod = async (
     const foodRevenue =
       booking.bookingFoodDrinks?.reduce(
         (sum, fd) => sum + (fd.totalPrice ?? 0),
-        0
+        0,
       ) ?? 0;
 
     const totalRevenue = booking.totalPrice ?? 0;
@@ -288,15 +288,15 @@ export const getRevenueByPeriod = async (
 
   const totalTicketRevenue = dailyRevenues.reduce(
     (sum, d) => sum + d.totalTicketRevenue,
-    0
+    0,
   );
   const totalFoodDrinkRevenue = dailyRevenues.reduce(
     (sum, d) => sum + d.totalFoodDrinkRevenue,
-    0
+    0,
   );
   const totalRevenue = dailyRevenues.reduce(
     (sum, d) => sum + d.totalRevenue,
-    0
+    0,
   );
 
   const summary = {
@@ -326,7 +326,7 @@ export const getRevenueAndOccupancyByCinema = async (
   startDate?: Date,
   endDate?: Date,
   type?: string,
-  cinemaId?: string
+  cinemaId?: string,
 ) => {
   const whereBooking = {
     ...(startDate && endDate
@@ -362,14 +362,14 @@ export const getRevenueAndOccupancyByCinema = async (
     data: { data: showtimes },
   } = await axios.post(
     `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
-    { showtimeIds }
+    { showtimeIds },
   );
 
   const showtimeMap = new Map<string, { cinemaId: string; roomId: string }>(
     showtimes.map((s: any) => [
       s.id,
       { cinemaId: s.cinemaId, roomId: s.roomId },
-    ])
+    ]),
   );
 
   const cinemaStats = new Map<
@@ -408,7 +408,7 @@ export const getRevenueAndOccupancyByCinema = async (
 
     const fnbRevenue = booking.bookingFoodDrinks.reduce(
       (sum, item) => sum + item.totalPrice,
-      0
+      0,
     );
 
     const seatCount = booking.bookingSeats.length;
@@ -451,11 +451,11 @@ export const getRevenueAndOccupancyByCinema = async (
     data: { data: rooms },
   } = await axios.post(
     `${process.env.CINEMA_SERVICE_URL}/api/rooms/public/batch`,
-    { roomIds }
+    { roomIds },
   );
 
   const roomSeatCount = new Map(
-    rooms.map((r: any) => [r.id, r.totalSeats || 0])
+    rooms.map((r: any) => [r.id, r.totalSeats || 0]),
   );
 
   const totalSeatsByCinema = new Map<string, number>();
@@ -466,7 +466,7 @@ export const getRevenueAndOccupancyByCinema = async (
     const totalSeats = roomSeatCount.get(showtime.roomId) || 0;
     totalSeatsByCinema.set(
       cid,
-      (totalSeatsByCinema.get(cid) || 0) + Number(totalSeats)
+      (totalSeatsByCinema.get(cid) || 0) + Number(totalSeats),
     );
   }
 
@@ -486,7 +486,7 @@ export const getRevenueAndOccupancyByCinema = async (
     data: { data: cinemas },
   } = await axios.post(
     `${process.env.CINEMA_SERVICE_URL}/api/cinemas/public/batch`,
-    { cinemaIds: targetCinemaIds }
+    { cinemaIds: targetCinemaIds },
   );
 
   const cinemaMap = new Map(cinemas.map((c: any) => [c.id, c]));
@@ -558,7 +558,7 @@ export const getRevenueAndOccupancyByMovie = async (
   startDate?: Date,
   endDate?: Date,
   type?: string,
-  cinemaId?: string
+  cinemaId?: string,
 ) => {
   const whereBooking = {
     ...(startDate && endDate
@@ -594,7 +594,7 @@ export const getRevenueAndOccupancyByMovie = async (
     data: { data: showtimes },
   } = await axios.post(
     `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
-    { showtimeIds }
+    { showtimeIds },
   );
 
   const filteredShowtimes = cinemaId
@@ -605,7 +605,7 @@ export const getRevenueAndOccupancyByMovie = async (
     filteredShowtimes.map((s: any) => [
       s.id,
       { movieId: s.movieId, roomId: s.roomId },
-    ])
+    ]),
   );
 
   const movieStats = new Map<
@@ -643,7 +643,7 @@ export const getRevenueAndOccupancyByMovie = async (
 
     const fnbRevenue = booking.bookingFoodDrinks.reduce(
       (sum, item) => sum + item.totalPrice,
-      0
+      0,
     );
     const seatCount = booking.bookingSeats.length;
 
@@ -685,11 +685,11 @@ export const getRevenueAndOccupancyByMovie = async (
     data: { data: rooms },
   } = await axios.post(
     `${process.env.CINEMA_SERVICE_URL}/api/rooms/public/batch`,
-    { roomIds }
+    { roomIds },
   );
 
   const roomSeatCount = new Map(
-    rooms.map((r: any) => [r.id, r.totalSeats || 0])
+    rooms.map((r: any) => [r.id, r.totalSeats || 0]),
   );
 
   const totalSeatsByMovie = new Map<string, number>();
@@ -697,7 +697,7 @@ export const getRevenueAndOccupancyByMovie = async (
     const totalSeats = roomSeatCount.get(showtime.roomId) || 0;
     totalSeatsByMovie.set(
       showtime.movieId,
-      (totalSeatsByMovie.get(showtime.movieId) || 0) + Number(totalSeats)
+      (totalSeatsByMovie.get(showtime.movieId) || 0) + Number(totalSeats),
     );
   }
 
@@ -714,7 +714,7 @@ export const getRevenueAndOccupancyByMovie = async (
     data: { data: movies },
   } = await axios.post(
     `${process.env.MOVIE_SERVICE_URL}/api/movies/public/batch`,
-    { movieIds }
+    { movieIds },
   );
 
   const movieMap = new Map(movies.map((m: any) => [m.id, m]));
@@ -843,7 +843,7 @@ export const updateBookingStatus = async (
   redisClient: any,
   bookingId: string,
   status: string,
-  paymentMethod: string
+  paymentMethod: string,
 ) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -874,7 +874,7 @@ export const updateBookingStatus = async (
           seatId: seat.seatId,
           status: "released",
           expiresAt: null,
-        })
+        }),
       );
 
       await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
@@ -890,7 +890,7 @@ export const updateBookingStatus = async (
           seatId: seat.seatId,
           status: "booked",
           expiresAt: null,
-        })
+        }),
       );
 
       await redisClient.del(`hold:${booking.showtimeId}:${seat.seatId}`);
@@ -910,7 +910,7 @@ export const getPeakHoursInMonth = async (
   month: number,
   year: number,
   cinemaId?: string,
-  type?: string
+  type?: string,
 ) => {
   if (month < 1 || month > 12) {
     logger.warn("Invalid month for peak hours report", { month, year });
@@ -977,7 +977,7 @@ export const getPeakHoursInMonth = async (
     data: { data: showtimes },
   } = await axios.post(
     `${process.env.SHOWTIME_SERVICE_URL}/api/showtimes/public/batch`,
-    { showtimeIds }
+    { showtimeIds },
   );
 
   const showtimeStartMap = new Map<string, Date>();
@@ -1055,6 +1055,11 @@ export const maskBookingAsUsed = async (bookingId: string) => {
   if (!booking) {
     logger.warn("Booking not found for masking", { bookingId });
     throw new CustomError("Booking not found", 404);
+  }
+
+  if (booking.isUsed) {
+    logger.warn("Booking is already marked as used", { bookingId });
+    throw new CustomError("Booking is already marked as used", 400);
   }
 
   const updatedBooking = await prisma.booking.update({
