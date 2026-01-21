@@ -28,7 +28,7 @@ export const reviewResolver = {
         type?: string;
         status?: string;
         isActive?: boolean;
-      }
+      },
     ) => {
       const pageNumber = Number(page) || undefined;
       const limitNumber = Number(limit) || undefined;
@@ -53,12 +53,22 @@ export const reviewResolver = {
       }
       // Find reviews by movieId and optional rating
       const reviews = await mongooseQuery;
+
+      reviews.forEach((review: any) => {
+        if (Array.isArray(review.response)) {
+          review.response.sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          );
+        }
+      });
+
       // Count total reviews for pagination
       const totalItems = await Review.countDocuments(query);
       // Calculate total pages
       const totalPages = limitNumber ? Math.ceil(totalItems / limitNumber) : 1;
       logger.info(
-        `Fetched ${reviews.length} reviews for page ${pageNumber} with limit ${limitNumber}`
+        `Fetched ${reviews.length} reviews for page ${pageNumber} with limit ${limitNumber}`,
       );
       // Return paginated response
       return {
@@ -140,7 +150,7 @@ export const reviewResolver = {
         rating: number;
         content?: string;
       },
-      context: { user?: AuthenticatedUser }
+      context: { user?: AuthenticatedUser },
     ) => {
       // Check if user is authenticated
       if (!context.user) {
@@ -167,7 +177,7 @@ export const reviewResolver = {
       try {
         const response = await axios.post(
           `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
-          { text: content }
+          { text: content },
         );
         const label = response.data.label;
         switch (label) {
@@ -210,7 +220,7 @@ export const reviewResolver = {
             movieId,
             rating,
             totalReviews,
-          }
+          },
         );
 
         logger.info("Review created and movie rating updated successfully", {
@@ -227,7 +237,7 @@ export const reviewResolver = {
 
         throw new CustomError(
           "Failed to create review and update movie rating",
-          500
+          500,
         );
       }
     },
@@ -241,7 +251,7 @@ export const reviewResolver = {
         reviewId: string;
         content: string;
       },
-      context: { user?: AuthenticatedUser }
+      context: { user?: AuthenticatedUser },
     ) => {
       // Check if user is authenticated
       if (!context.user) {
@@ -281,7 +291,7 @@ export const reviewResolver = {
         content: string;
         rating: number;
       },
-      context: { user?: AuthenticatedUser }
+      context: { user?: AuthenticatedUser },
     ) => {
       // Check if user is authenticated
       if (!context.user) {
@@ -305,7 +315,7 @@ export const reviewResolver = {
       try {
         const response = await axios.post(
           `${process.env.SENTIMENT_SERVICE_URL}/api/predict-sentiment`,
-          { text: content }
+          { text: content },
         );
         const label = response.data.label;
         switch (label) {
@@ -331,7 +341,7 @@ export const reviewResolver = {
     hideReviewById: async (
       _: any,
       { reviewId }: { reviewId: string },
-      context: { user?: AuthenticatedUser }
+      context: { user?: AuthenticatedUser },
     ) => {
       // Check if user is authenticated
       if (!context.user) {
@@ -353,7 +363,7 @@ export const reviewResolver = {
     unhideReviewById: async (
       _: any,
       { reviewId }: { reviewId: string },
-      context: { user?: AuthenticatedUser }
+      context: { user?: AuthenticatedUser },
     ) => {
       // Check if user is authenticated
       if (!context.user) {
